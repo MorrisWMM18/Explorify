@@ -29,7 +29,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<CurrentTrackRe
         songId: track.id,
         songUri: track.uri,
         songName: track.name,
-        songArtist: track.artists[0].name,
+        songArtist: track.artists.map((artist) => artist.name).join(", "),
         songArtistId: track.artists[0].id,
         songPicture: track.album.images[0]?.url ?? null,
         songPopularity: track.popularity,
