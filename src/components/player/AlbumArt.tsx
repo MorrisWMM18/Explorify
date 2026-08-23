@@ -6,8 +6,7 @@ interface AlbumArtProps {
 }
 
 /**
- * Square cover for the Now Playing card. Replaces the old FlipCard —
- * the design has a static panel, not a 3D hover flip.
+ * Song photo of the current track.
  */
 function AlbumArt({ src, songName }: AlbumArtProps) {
   return (

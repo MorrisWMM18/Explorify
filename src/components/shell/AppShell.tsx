@@ -6,10 +6,6 @@ interface AppShellProps {
   children: ReactNode;
 }
 
-/**
- * Server component — pure composition. Anything needing hooks or
- * react-aria lives in the leaves below.
- */
 function AppShell({ children }: AppShellProps) {
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden">

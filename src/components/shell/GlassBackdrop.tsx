@@ -1,5 +1,5 @@
 /**
- * The page's atmosphere: a fixed gradient wash plus three heavily blurred
+ * The page's backdrop: a fixed gradient wash plus three blurred
  * colour blobs that the glass panels refract. Pure markup with no client
  * JS — it stays server-rendered.
  */

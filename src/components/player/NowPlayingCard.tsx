@@ -18,6 +18,8 @@ import GlassPanel from "../ui/GlassPanel";
 import AlbumArt from "./AlbumArt";
 import TrackMeta from "./TrackMeta";
 import DiscoverButton from "./DiscoverButton";
+import TransportControls from "./TransportControls";
+import TrackProgress from "./TrackProgress";
 
 function NowPlayingCard() {
   const dispatch = useAppDispatch();
@@ -96,6 +98,8 @@ function NowPlayingCard() {
       <GlassPanel radius="card" className="grid grid-cols-[300px_1fr] gap-11 p-9">
         <div className="flex flex-col gap-[22px]">
           <AlbumArt src={currSong?.songPicture ?? null} songName={currSong?.songName ?? null} />
+          <TransportControls />
+          <TrackProgress />
         </div>
 
         {currSong ? (

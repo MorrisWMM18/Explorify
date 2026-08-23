@@ -10,9 +10,13 @@ function Header() {
 
   return (
     <header className="relative z-20 flex h-[74px] flex-none items-center justify-between px-11">
+      {/* Explorify + Home tab */}
       <div className="flex items-center gap-[30px]">
         <div className="flex items-center gap-[11px]">
-          <div className="size-[30px] flex-none rounded-swatch" data-role="logo-mark" />
+          <div
+            className="accent-gloss size-[30px] flex-none rounded-swatch shadow-control"
+            data-role="logo-mark"
+          />
           <span className="font-display text-[19px] font-semibold tracking-[-0.02em]">
             Explorify
           </span>
@@ -25,11 +29,10 @@ function Header() {
         </nav>
       </div>
 
+      {/* Spotify connect status + Account */}
       <div className="flex items-center gap-[18px]">
         <StatusPill>Connected to Spotify</StatusPill>
 
-        {/* The design shows no logout control; hanging it off the avatar
-            keeps signOut reachable without inventing new chrome. */}
         <MenuTrigger>
           <Button
             aria-label={user?.name ? `Account menu for ${user.name}` : "Account menu"}
@@ -49,9 +52,18 @@ function Header() {
             )}
             <span className="text-sm font-medium">{user?.name}</span>
           </Button>
-          <Popover>
-            <Menu onAction={() => signOut()}>
-              <MenuItem id="signout">Log out</MenuItem>
+          <Popover
+            placement="bottom end"
+            offset={12}
+            className="glass-menu min-w-[var(--trigger-width)] rounded-panel p-1.5 entering:[animation:menu-in_0.18s_var(--ease-slide)] exiting:[animation:menu-out_0.13s_ease-in]"
+          >
+            <Menu onAction={() => signOut()} className="outline-none">
+              <MenuItem
+                id="signout"
+                className="cursor-pointer rounded-row px-5 py-2.5 text-center text-sm font-medium text-ink-2 outline-none hover:bg-glass-hover focus:bg-glass-hover pressed:bg-glass-hover"
+              >
+                Log out
+              </MenuItem>
             </Menu>
           </Popover>
         </MenuTrigger>

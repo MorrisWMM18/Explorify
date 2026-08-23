@@ -28,7 +28,9 @@ function GlassPanel({
   className = "",
 }: GlassPanelProps) {
   return (
-    <Component className={`${radiusClass[radius]} ${className}`}>{children}</Component>
+    <Component className={`glass-panel ${radiusClass[radius]} ${className}`}>
+      {children}
+    </Component>
   );
 }
 

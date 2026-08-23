@@ -7,6 +7,7 @@ import { Button, Menu, MenuItem, MenuTrigger, Popover } from "react-aria-compone
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectNowPlayingTrackId, setNowPlayingTrack } from "@/store/songSlice";
 import { getErrorMessage } from "@/lib/errors";
+import { formatDuration } from "@/lib/format";
 import type { SpotifyTrack } from "@/types/spotify";
 
 import IconButton from "../ui/IconButton";
@@ -15,11 +16,6 @@ import AddToPlaylistModal from "../playlists/AddToPlaylistModal";
 
 interface SongRowProps {
   track: SpotifyTrack;
-}
-
-function formatTime(seconds: number) {
-  const whole = Math.max(0, Math.round(seconds));
-  return `${Math.floor(whole / 60)}:${(whole % 60).toString().padStart(2, "0")}`;
 }
 
 function SongRow({ track }: SongRowProps) {
@@ -138,7 +134,7 @@ function SongRow({ track }: SongRowProps) {
             <div className="flex items-center gap-2.5 px-1.5">
               <EqBars />
               <span className="min-w-[28px] text-xs tabular-nums">
-                {formatTime(remaining ?? 0)}
+                {formatDuration(Math.max(0, remaining ?? 0) * 1000)}
               </span>
             </div>
           )}

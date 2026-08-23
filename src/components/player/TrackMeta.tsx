@@ -1,3 +1,4 @@
+import { formatDuration } from "@/lib/format";
 import type { CurrSong, SongAnalysis } from "@/types/spotify";
 
 interface TrackMetaProps {
@@ -5,17 +6,11 @@ interface TrackMetaProps {
   songAnalysis: SongAnalysis;
 }
 
-function formatDuration(durationMs: number) {
-  const totalSeconds = Math.round(durationMs / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-}
-
-/** Right-hand column of the Now Playing card: title and catalog metadata. */
+/** Right-hand column of the Now Playing card: title and track metadata. */
 function TrackMeta({ currSong, songAnalysis }: TrackMetaProps) {
   return (
     <div className="flex flex-col gap-6">
+      {/* Song name + Artist */}
       <div>
         <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.12em]">
           Now Playing
@@ -28,6 +23,7 @@ function TrackMeta({ currSong, songAnalysis }: TrackMetaProps) {
 
       <hr className="h-px border-0" />
 
+      {/* Song popularity - TODO: Figure if we need to replace this */}
       <div>
         <p className="mb-2 text-[13px]">Popularity</p>
         <div
@@ -45,13 +41,17 @@ function TrackMeta({ currSong, songAnalysis }: TrackMetaProps) {
         </div>
       </div>
 
+      {/* Song metadata */}
       <div className="grid grid-cols-2 gap-6">
         <div className="col-span-full">
           <p className="mb-2 text-[13px]">Genres</p>
           {songAnalysis.genres.length > 0 ? (
             <ul className="flex list-none flex-wrap gap-[7px] p-0">
               {songAnalysis.genres.map((genre) => (
-                <li key={genre} className="rounded-full px-3 py-1.5 text-xs">
+                <li
+                  key={genre}
+                  className="rounded-full border border-hairline-hi bg-glass px-3 py-1.5 text-xs text-ink-2 shadow-control"
+                >
                   {genre}
                 </li>
               ))}

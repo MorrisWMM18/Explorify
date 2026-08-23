@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @plugin "tailwindcss-react-aria-components";
 
-/* Design tokens for the "Currently" glass design.
+/* Design configuration for Explorify's glass design.
    Neutrals are oklch (as authored); the accent stays hex so the
    color-mix(in oklab, ...) gloss below reproduces the design exactly. */
 @theme {
@@ -90,6 +90,59 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* GlassBackdrop's two fixed layers. The blobs carry the only saturated
+   colour on the page — they're what the glass panels refract, so they're
+   blurred as a group (one filter, no per-blob edge seams). */
+[data-layer="gradient"] {
+  background-image: linear-gradient(
+    165deg,
+    oklch(0.98 0.01 265) 0%,
+    oklch(0.96 0.02 285) 45%,
+    oklch(0.95 0.025 245) 100%
+  );
+}
+
+[data-layer="blobs"] {
+  filter: blur(90px);
+  opacity: 0.55;
+}
+
+[data-layer="blobs"] > :nth-child(1) {
+  background: color-mix(in oklab, var(--color-accent) 55%, white);
+}
+
+[data-layer="blobs"] > :nth-child(2) {
+  background: oklch(0.78 0.16 320);
+}
+
+[data-layer="blobs"] > :nth-child(3) {
+  background: oklch(0.82 0.14 195);
+}
+
+/* Account drop-down. RAC drives [data-entering]/[data-exiting] on the popover
+   and holds the unmount until the exit animation finishes. */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes menu-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
   }
 }
 
