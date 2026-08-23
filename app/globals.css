@@ -1,22 +1,158 @@
-div,
-button {
-  margin: 0px;
+@import "tailwindcss";
+@plugin "tailwindcss-react-aria-components";
+
+/* Design configuration for Explorify's glass design.
+   Neutrals are oklch (as authored); the accent stays hex so the
+   color-mix(in oklab, ...) gloss below reproduces the design exactly. */
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-inter), sans-serif;
+
+  --color-accent: #3b7df5;
+
+  --color-page: oklch(0.97 0.008 265);
+
+  /* text ramp, strongest to faintest */
+  --color-ink: oklch(0.24 0.02 265);
+  --color-ink-2: oklch(0.28 0.02 265);
+  --color-ink-3: oklch(0.38 0.02 265);
+  --color-ink-4: oklch(0.5 0.02 265);
+  --color-ink-5: oklch(0.56 0.02 265);
+
+  --color-glass: oklch(1 0 0 / 55%);
+  --color-glass-header: oklch(1 0 0 / 67%);
+  --color-glass-hover: oklch(1 0 0 / 85%);
+  --color-hairline: oklch(1 0 0 / 45%);
+  --color-hairline-hi: oklch(1 0 0 / 70%);
+  --color-divider: oklch(0.5 0.02 265 / 14%);
+  --color-online: oklch(0.7 0.18 145);
+  --color-dot-idle: oklch(0.5 0.02 265 / 22%);
+  --color-scrim: oklch(0.5 0.03 265 / 24%);
+  --color-danger: oklch(0.58 0.19 25);
+
+  --radius-card: 26px;
+  --radius-panel: 22px;
+  --radius-art: 18px;
+  --radius-row: 14px;
+  --radius-chip: 12px;
+  --radius-swatch: 10px;
+
+  --shadow-glass:
+    0 20px 50px oklch(0.45 0.05 265 / 14%), inset 0 1px 0 oklch(1 0 0 / 85%);
+  --shadow-list:
+    0 14px 40px oklch(0.45 0.05 265 / 12%), inset 0 1px 0 oklch(1 0 0 / 80%);
+  --shadow-control: 0 1px 3px oklch(0.45 0.04 265 / 12%);
+
+  --blur-glass: 34px;
+  --ease-slide: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* The glass recipe: fill + backdrop filter + hairline + shadow.
+   Repeated on ~10 surfaces, so it earns a utility. */
+@utility glass-panel {
+  background: var(--color-glass);
+  backdrop-filter: blur(var(--blur-glass)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(180%);
+  border: 1px solid var(--color-hairline-hi);
+  box-shadow: var(--shadow-glass);
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+@utility glass-header {
+  background: var(--color-glass-header);
+  backdrop-filter: blur(var(--blur-glass)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(180%);
 }
 
-a {
-  color: #dadce1;
-  text-decoration: none;
+/* Popovers and the modal sit at a tighter blur than the page panels. */
+@utility glass-menu {
+  background: oklch(1 0 0 / 72%);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid oklch(1 0 0 / 80%);
+  box-shadow: 0 12px 32px oklch(0.45 0.04 265 / 22%);
+}
+
+/* Tinted from --color-accent, so re-theming the accent re-tints
+   every glossed surface at once. */
+@utility accent-gloss {
+  background-image: linear-gradient(
+    160deg,
+    color-mix(in oklab, var(--color-accent) 78%, white) 0%,
+    var(--color-accent) 55%,
+    color-mix(in oklab, var(--color-accent) 82%, black) 100%
+  );
+}
+
+@layer base {
+  body {
+    background-color: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* GlassBackdrop's two fixed layers. The blobs carry the only saturated
+   colour on the page — they're what the glass panels refract, so they're
+   blurred as a group (one filter, no per-blob edge seams). */
+[data-layer="gradient"] {
+  background-image: linear-gradient(
+    165deg,
+    oklch(0.98 0.01 265) 0%,
+    oklch(0.96 0.02 285) 45%,
+    oklch(0.95 0.025 245) 100%
+  );
+}
+
+[data-layer="blobs"] {
+  filter: blur(90px);
+  opacity: 0.55;
+}
+
+[data-layer="blobs"] > :nth-child(1) {
+  background: color-mix(in oklab, var(--color-accent) 55%, white);
+}
+
+[data-layer="blobs"] > :nth-child(2) {
+  background: oklch(0.78 0.16 320);
+}
+
+[data-layer="blobs"] > :nth-child(3) {
+  background: oklch(0.82 0.14 195);
+}
+
+/* Account drop-down. RAC drives [data-entering]/[data-exiting] on the popover
+   and holds the unmount until the exit animation finishes. */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes menu-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+}
+
+/* Preview equaliser bars on an actively playing song row. */
+@keyframes sr-bar {
+  0%,
+  100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1);
+  }
 }

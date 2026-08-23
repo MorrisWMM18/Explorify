@@ -98,6 +98,20 @@ export interface DiscoverError {
 
 export type DiscoverResponse = DiscoverNoActivePlayback | DiscoverSuccess | DiscoverError;
 
+// GET /api/spotify/artists/[artistId] response shapes.
+// Discriminated by key presence, like the unions above, so consumers keep
+// narrowing with `"error" in data`.
+export interface ArtistDetailSuccess {
+  artist: SpotifyArtist;
+  topTracks: SpotifyTrack[];
+}
+
+export interface ArtistDetailError {
+  error: string;
+}
+
+export type ArtistDetailResponse = ArtistDetailSuccess | ArtistDetailError;
+
 /** -------------------------
  * Spotify API schemas
  ----------------------------*/
