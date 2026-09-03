@@ -8,10 +8,12 @@ import {
   updateDiscoverResults,
   setNoActivePlayback,
   setCurrSong,
+  setPlaybackState,
 } from "@/store/songSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getErrorMessage } from "@/lib/errors";
-import type { CurrentTrackResponse, DiscoverResponse } from "@/types/spotify";
+import { fetchCurrentTrack } from "@/lib/currentTrack";
+import type { DiscoverResponse } from "@/types/spotify";
 
 import GlassPanel from "../ui/GlassPanel";
 import AlbumArt from "./AlbumArt";
@@ -46,6 +48,7 @@ function NowPlayingCard() {
         dispatch(setNoActivePlayback());
       } else {
         dispatch(updateDiscoverResults(data));
+        dispatch(setPlaybackState({ ...data.playback, lastSyncedAt: Date.now() }));
       }
     } catch (err) {
       setError(getErrorMessage(err));
@@ -62,21 +65,14 @@ function NowPlayingCard() {
       setError(null);
 
       try {
-        const response = await fetch("/api/spotify/current-track");
-        const data: CurrentTrackResponse = await response.json();
-
-        if (!response.ok || "error" in data) {
-          throw new Error(
-            "error" in data ? data.error : "Something went wrong, please try again."
-          );
-        }
-
+        const data = await fetchCurrentTrack();
         if (cancelled) return;
 
         if ("noActivePlayback" in data) {
           dispatch(setNoActivePlayback());
         } else {
           dispatch(setCurrSong(data.currSong));
+          dispatch(setPlaybackState({ ...data.playback, lastSyncedAt: Date.now() }));
         }
       } catch (err) {
         if (!cancelled) setError(getErrorMessage(err));
@@ -90,6 +86,29 @@ function NowPlayingCard() {
       cancelled = true;
     };
   }, [dispatch]);
+
+  // Background resync: corrects drift in the client-side ticking progress bar every
+  // ~20s while something is playing. Failures are swallowed — a background resync
+  // must never surface a UI error.
+  useEffect(() => {
+    if (!currSong) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const data = await fetchCurrentTrack();
+        if ("noActivePlayback" in data) {
+          dispatch(setNoActivePlayback());
+        } else {
+          dispatch(setCurrSong(data.currSong));
+          dispatch(setPlaybackState({ ...data.playback, lastSyncedAt: Date.now() }));
+        }
+      } catch {
+        // Swallow — see comment above.
+      }
+    }, 20_000);
+
+    return () => clearInterval(intervalId);
+  }, [currSong, dispatch]);
 
   return (
     <section className="flex flex-col gap-5">

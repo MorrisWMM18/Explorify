@@ -106,6 +106,11 @@ export async function POST(req: NextRequest): Promise<NextResponse<DiscoverRespo
       },
       songRecommendations,
       artistRecommendations,
+      playback: {
+        isPlaying: playback.is_playing,
+        progressMs: playback.progress_ms ?? 0,
+        deviceAvailable: Boolean(playback.device?.id),
+      },
     });
   } catch (error) {
     const status = error instanceof SpotifyApiError ? error.status : 500;

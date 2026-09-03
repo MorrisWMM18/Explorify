@@ -3,6 +3,8 @@ import { getAccessToken, spotifyFetch, SpotifyApiError } from "@/lib/spotifyApi"
 import { getErrorMessage } from "@/lib/errors";
 import type { CurrentTrackResponse, SpotifyArtist, SpotifyCurrentlyPlaying } from "@/types/spotify";
 
+export const runtime = "nodejs";
+
 export async function GET(req: NextRequest): Promise<NextResponse<CurrentTrackResponse>> {
   const accessToken = await getAccessToken(req);
   if (!accessToken) {
@@ -47,6 +49,11 @@ export async function GET(req: NextRequest): Promise<NextResponse<CurrentTrackRe
         durationMs: track.duration_ms,
         releaseDate: track.album.release_date,
         genres,
+      },
+      playback: {
+        isPlaying: playback.is_playing,
+        progressMs: playback.progress_ms ?? 0,
+        deviceAvailable: Boolean(playback.device?.id),
       },
     });
   } catch (error) {
