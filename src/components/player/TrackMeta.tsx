@@ -1,13 +1,12 @@
 import { formatDuration } from "@/lib/format";
-import type { CurrSong, SongAnalysis } from "@/types/spotify";
+import type { CurrSong } from "@/types/spotify";
 
 interface TrackMetaProps {
   currSong: CurrSong;
-  songAnalysis: SongAnalysis;
 }
 
 /** Right-hand column of the Now Playing card: title and track metadata. */
-function TrackMeta({ currSong, songAnalysis }: TrackMetaProps) {
+function TrackMeta({ currSong }: TrackMetaProps) {
   return (
     <div className="flex flex-col gap-6">
       {/* Song name + Artist */}
@@ -23,31 +22,13 @@ function TrackMeta({ currSong, songAnalysis }: TrackMetaProps) {
 
       <hr className="h-px border-0" />
 
-      {/* Song popularity - TODO: Figure if we need to replace this */}
-      <div>
-        <p className="mb-2 text-[13px]">Popularity</p>
-        <div
-          className="h-[7px] max-w-[320px] overflow-hidden rounded-[4px]"
-          role="progressbar"
-          aria-label="Popularity"
-          aria-valuenow={songAnalysis.popularity}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        >
-          <div
-            className="h-full rounded-[4px]"
-            style={{ width: `${songAnalysis.popularity}%` }}
-          />
-        </div>
-      </div>
-
       {/* Song metadata */}
       <div className="grid grid-cols-2 gap-6">
         <div className="col-span-full">
           <p className="mb-2 text-[13px]">Genres</p>
-          {songAnalysis.genres.length > 0 ? (
+          {currSong.genres.length > 0 ? (
             <ul className="flex list-none flex-wrap gap-[7px] p-0">
-              {songAnalysis.genres.map((genre) => (
+              {currSong.genres.map((genre) => (
                 <li
                   key={genre}
                   className="rounded-full border border-hairline-hi bg-glass px-3 py-1.5 text-xs text-ink-2 shadow-control"
@@ -63,21 +44,13 @@ function TrackMeta({ currSong, songAnalysis }: TrackMetaProps) {
 
         <div>
           <p className="mb-1.5 text-[13px]">Release Date</p>
-          <p className="text-sm">{songAnalysis.releaseDate || "Unknown"}</p>
+          <p className="text-sm">{currSong.releaseDate || "Unknown"}</p>
         </div>
 
         <div>
           <p className="mb-1.5 text-[13px]">Duration</p>
-          <p className="text-sm">{formatDuration(songAnalysis.durationMs)}</p>
+          <p className="text-sm">{formatDuration(currSong.durationMs)}</p>
         </div>
-
-        {songAnalysis.explicit && (
-          <div className="col-span-full">
-            <span className="rounded-[4px] px-2.5 py-[3px] text-xs tracking-widest">
-              EXPLICIT
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );

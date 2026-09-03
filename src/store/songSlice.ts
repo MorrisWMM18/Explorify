@@ -1,9 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import type { CurrSong, DiscoverSuccess, SongAnalysis, SpotifyArtist, SpotifyTrack } from "@/types/spotify";
+import type { CurrSong, DiscoverSuccess, SpotifyArtist, SpotifyTrack } from "@/types/spotify";
 
 export interface SongState {
   currSong: CurrSong | null;
-  songAnalysis: SongAnalysis;
   songRecommendations: SpotifyTrack[];
   artistRecommendations: SpotifyArtist[];
   noActivePlayback: boolean;
@@ -12,15 +11,6 @@ export interface SongState {
 
 const initialState: SongState = {
   currSong: null,
-  // Catalog metadata standing in for Spotify's own audio-features analysis, which
-  // was deprecated 2024-11-27 and is unavailable to this app (see discover/route.ts).
-  songAnalysis: {
-    popularity: 0,
-    explicit: false,
-    durationMs: 0,
-    releaseDate: null,
-    genres: [],
-  },
   songRecommendations: [],
   artistRecommendations: [],
   noActivePlayback: false,
@@ -33,10 +23,8 @@ export const songSlice = createSlice({
   initialState,
   reducers: {
     updateDiscoverResults: (state, action: PayloadAction<DiscoverSuccess>) => {
-      const { currSong, songAnalysis, songRecommendations, artistRecommendations } =
-        action.payload;
+      const { currSong, songRecommendations, artistRecommendations } = action.payload;
       state.currSong = currSong;
-      state.songAnalysis = songAnalysis;
       state.songRecommendations = songRecommendations;
       state.artistRecommendations = artistRecommendations;
       state.noActivePlayback = false;
@@ -59,7 +47,6 @@ export const { updateDiscoverResults, setNoActivePlayback, setNowPlayingTrack, s
   songSlice.actions;
 
 export const selectSong = (state: { song: SongState }) => state.song.currSong;
-export const selectSongAnalysis = (state: { song: SongState }) => state.song.songAnalysis;
 export const selectSongRecommendations = (state: { song: SongState }) => state.song.songRecommendations;
 export const selectArtistRecommendations = (state: { song: SongState }) => state.song.artistRecommendations;
 export const selectNoActivePlayback = (state: { song: SongState }) => state.song.noActivePlayback;

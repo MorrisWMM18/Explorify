@@ -31,7 +31,7 @@ function dedupeById<T extends { id?: string }>(items: T[]): T[] {
 // 403 unconditionally for an app like this one, with no application path to get them
 // back. This route rebuilds "similar songs/artists" from what's still available: the
 // current artist's own top tracks, plus genre-filtered Search results, plus catalog
-// metadata (popularity/genres/release date/duration) in place of Spotify's own
+// metadata (genres/release date/duration, on currSong) in place of Spotify's own
 // audio-feature analysis.
 export async function POST(req: NextRequest): Promise<NextResponse<DiscoverResponse>> {
   const accessToken = await getAccessToken(req);
@@ -97,14 +97,9 @@ export async function POST(req: NextRequest): Promise<NextResponse<DiscoverRespo
         songId: track.id,
         songUri: track.uri,
         songName: track.name,
-        songArtist: track.artists[0].name,
+        songArtist: track.artists.map((a) => a.name).join(", "),
         songArtistId: artistId,
         songPicture: track.album.images[0]?.url ?? null,
-        songPopularity: track.popularity,
-      },
-      songAnalysis: {
-        popularity: track.popularity,
-        explicit: track.explicit,
         durationMs: track.duration_ms,
         releaseDate: track.album.release_date,
         genres: artist?.genres ?? [],

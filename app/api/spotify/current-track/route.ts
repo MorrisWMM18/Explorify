@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken, spotifyFetch, SpotifyApiError } from "@/lib/spotifyApi";
 import { getErrorMessage } from "@/lib/errors";
-import type { CurrentTrackResponse, SpotifyCurrentlyPlaying } from "@/types/spotify";
+import type { CurrentTrackResponse, SpotifyArtist, SpotifyCurrentlyPlaying } from "@/types/spotify";
 
 export async function GET(req: NextRequest): Promise<NextResponse<CurrentTrackResponse>> {
   const accessToken = await getAccessToken(req);
@@ -23,16 +23,30 @@ export async function GET(req: NextRequest): Promise<NextResponse<CurrentTrackRe
     }
 
     const track = playback.item;
+    const artistId = track.artists[0].id;
+
+    // Genres only come from a separate artist lookup — best-effort, since this
+    // route runs unconditionally on every mount rather than just on a Discover
+    // click, so a transient Spotify hiccup here shouldn't block the whole card.
+    let genres: string[] = [];
+    try {
+      const artist = await spotifyFetch<SpotifyArtist>(accessToken, `/artists/${artistId}`);
+      genres = artist?.genres ?? [];
+    } catch {
+      genres = [];
+    }
 
     return NextResponse.json({
       currSong: {
         songId: track.id,
         songUri: track.uri,
         songName: track.name,
-        songArtist: track.artists[0].name,
-        songArtistId: track.artists[0].id,
+        songArtist: track.artists.map((artist) => artist.name).join(", "),
+        songArtistId: artistId,
         songPicture: track.album.images[0]?.url ?? null,
-        songPopularity: track.popularity,
+        durationMs: track.duration_ms,
+        releaseDate: track.album.release_date,
+        genres,
       },
     });
   } catch (error) {

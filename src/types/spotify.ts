@@ -71,15 +71,6 @@ export interface SpotifySearchArtistsResponse {
 
 // ---- Bespoke app-level DTOs (NOT raw Spotify shapes) ----
 
-
-export interface SongAnalysis {
-  popularity: number;
-  explicit: boolean;
-  durationMs: number;
-  releaseDate: string | null;
-  genres: string[];
-}
-
 // POST /api/spotify/discover response shapes
 export interface DiscoverNoActivePlayback {
   noActivePlayback: true;
@@ -87,7 +78,6 @@ export interface DiscoverNoActivePlayback {
 
 export interface DiscoverSuccess {
   currSong: CurrSong;
-  songAnalysis: SongAnalysis;
   songRecommendations: SpotifyTrack[];
   artistRecommendations: SpotifyArtist[];
 }
@@ -223,7 +213,9 @@ export interface CurrSong {
   songArtist: string;
   songArtistId: string;
   songPicture: string | null;
-  songPopularity: number;
+  durationMs: number;
+  releaseDate: string | null;
+  genres: string[];
 }
 
 export interface CurrentTrackSuccess {

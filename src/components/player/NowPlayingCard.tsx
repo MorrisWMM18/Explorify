@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 
 import {
   selectSong,
-  selectSongAnalysis,
   selectNoActivePlayback,
   updateDiscoverResults,
   setNoActivePlayback,
@@ -24,7 +23,6 @@ import TrackProgress from "./TrackProgress";
 function NowPlayingCard() {
   const dispatch = useAppDispatch();
   const currSong = useAppSelector(selectSong);
-  const songAnalysis = useAppSelector(selectSongAnalysis);
   const noActivePlayback = useAppSelector(selectNoActivePlayback);
 
   const [loading, setLoading] = useState(false);
@@ -103,7 +101,7 @@ function NowPlayingCard() {
         </div>
 
         {currSong ? (
-          <TrackMeta currSong={currSong} songAnalysis={songAnalysis} />
+          <TrackMeta currSong={currSong} />
         ) : (
           <div className="flex flex-col justify-center gap-2">
             <h1 className="font-display text-[34px] font-semibold leading-[1.1]">

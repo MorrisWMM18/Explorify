@@ -5,11 +5,11 @@ import { useState } from "react";
 import { Slider, SliderFill, SliderThumb, SliderTrack } from "react-aria-components";
 
 import { useAppSelector } from "@/store/hooks";
-import { selectSongAnalysis } from "@/store/songSlice";
+import { selectSong } from "@/store/songSlice";
 import { formatDuration } from "@/lib/format";
 
-// songAnalysis.durationMs is 0 until Discover is pressed (see NowPlayingCard) —
-// fall back to a placeholder so the bar never renders as an empty 0:00 track.
+// currSong is null until the mount-time current-track fetch resolves (or nothing's
+// playing) — fall back to a placeholder so the bar never renders as an empty 0:00 track.
 const PLACEHOLDER_DURATION_MS = 210_000; // 3:30
 
 /**
@@ -17,8 +17,8 @@ const PLACEHOLDER_DURATION_MS = 210_000; // 3:30
  * thumb updates the elapsed/remaining labels but sends nothing to Spotify.
  */
 function TrackProgress() {
-  const songAnalysis = useAppSelector(selectSongAnalysis);
-  const durationMs = songAnalysis.durationMs || PLACEHOLDER_DURATION_MS;
+  const currSong = useAppSelector(selectSong);
+  const durationMs = currSong?.durationMs || PLACEHOLDER_DURATION_MS;
 
   const [position, setPosition] = useState(0);
 
