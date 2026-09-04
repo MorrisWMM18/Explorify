@@ -26,13 +26,6 @@ function dedupeById<T extends { id?: string }>(items: T[]): T[] {
   return result;
 }
 
-// Spotify deprecated /recommendations, /related-artists, and /audio-features on
-// 2024-11-27 for any app not already in Extended Quota Mode before that date — they
-// 403 unconditionally for an app like this one, with no application path to get them
-// back. This route rebuilds "similar songs/artists" from what's still available: the
-// current artist's own top tracks, plus genre-filtered Search results, plus catalog
-// metadata (genres/release date/duration, on currSong) in place of Spotify's own
-// audio-feature analysis.
 export async function POST(req: NextRequest): Promise<NextResponse<DiscoverResponse>> {
   const accessToken = await getAccessToken(req);
   if (!accessToken) {

@@ -1,8 +1,8 @@
 import type { CurrentTrackNoActivePlayback, CurrentTrackResponse, CurrentTrackSuccess } from "@/types/spotify";
 
 // Fetches "what's playing right now" from our own current-track route. Shared by
-// NowPlayingCard's mount effect, its 20s playback resync, and TransportControls'
-// post-skip refetch (Spotify's next/previous endpoints return 204 with no track info).
+// NowPlayingCard's mount effect, its 5s playback resync, and TransportControls'
+// post-skip refetch.
 // Throws on the error case, so the resolved value already excludes it — callers keep
 // narrowing with `"noActivePlayback" in data` only, same as the pre-extraction inline code.
 export async function fetchCurrentTrack(): Promise<CurrentTrackSuccess | CurrentTrackNoActivePlayback> {

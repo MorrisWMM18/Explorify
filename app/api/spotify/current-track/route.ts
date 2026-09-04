@@ -27,9 +27,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<CurrentTrackRe
     const track = playback.item;
     const artistId = track.artists[0].id;
 
-    // Genres only come from a separate artist lookup — best-effort, since this
-    // route runs unconditionally on every mount rather than just on a Discover
-    // click, so a transient Spotify hiccup here shouldn't block the whole card.
+    // Genres only come from a separate artist lookup
     let genres: string[] = [];
     try {
       const artist = await spotifyFetch<SpotifyArtist>(accessToken, `/artists/${artistId}`);

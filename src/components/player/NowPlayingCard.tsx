@@ -88,7 +88,7 @@ function NowPlayingCard() {
   }, [dispatch]);
 
   // Background resync: corrects drift in the client-side ticking progress bar every
-  // ~20s while something is playing. Failures are swallowed — a background resync
+  // ~5s while something is playing. Failures are swallowed — a background resync
   // must never surface a UI error.
   useEffect(() => {
     if (!currSong) return;
@@ -105,7 +105,7 @@ function NowPlayingCard() {
       } catch {
         // Swallow — see comment above.
       }
-    }, 20_000);
+    }, 5_000);
 
     return () => clearInterval(intervalId);
   }, [currSong, dispatch]);
