@@ -80,6 +80,7 @@ export interface DiscoverSuccess {
   currSong: CurrSong;
   songRecommendations: SpotifyTrack[];
   artistRecommendations: SpotifyArtist[];
+  playback: PlaybackStatus;
 }
 
 export interface DiscoverError {
@@ -218,8 +219,15 @@ export interface CurrSong {
   genres: string[];
 }
 
+export interface PlaybackStatus {
+  isPlaying: boolean;
+  progressMs: number;
+  deviceAvailable: boolean;
+}
+
 export interface CurrentTrackSuccess {
   currSong: CurrSong;
+  playback: PlaybackStatus;
 }
 
 export interface CurrentTrackNoActivePlayback {
