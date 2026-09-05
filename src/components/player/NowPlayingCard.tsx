@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   selectSong,
+  selectSongRecommendations,
   selectNoActivePlayback,
   updateDiscoverResults,
   setNoActivePlayback,
-  setCurrSong,
   setPlaybackState,
 } from "@/store/songSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { usePlaybackSync } from "@/hooks/usePlaybackSync";
 import { getErrorMessage } from "@/lib/errors";
-import { fetchCurrentTrack } from "@/lib/currentTrack";
 import type { DiscoverResponse } from "@/types/spotify";
 
 import GlassPanel from "../ui/GlassPanel";
@@ -25,12 +25,29 @@ import TrackProgress from "./TrackProgress";
 function NowPlayingCard() {
   const dispatch = useAppDispatch();
   const currSong = useAppSelector(selectSong);
+  const songRecommendations = useAppSelector(selectSongRecommendations);
   const noActivePlayback = useAppSelector(selectNoActivePlayback);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function getCurrPlaying() {
+  // Keeps currSong/playback in step with the real player: mount fetch, 5s poll,
+  // end-of-track trigger and refocus resync all live in here.
+  usePlaybackSync();
+
+  const previousSongIdRef = useRef<string | null>(null);
+  const discoverInFlightRef = useRef(false);
+  const pendingRediscoverRef = useRef(false);
+
+  async function getCurrPlaying({ auto = false }: { auto?: boolean } = {}) {
+    // Rapid skipping can outrun a single request — queue one re-run instead of
+    // stacking a discover call per track.
+    if (discoverInFlightRef.current) {
+      pendingRediscoverRef.current = true;
+      return;
+    }
+
+    discoverInFlightRef.current = true;
     setLoading(true);
     setError(null);
 
@@ -51,64 +68,42 @@ function NowPlayingCard() {
         dispatch(setPlaybackState({ ...data.playback, lastSyncedAt: Date.now() }));
       }
     } catch (err) {
-      setError(getErrorMessage(err));
+      // A background refresh failing is noise — don't paint an error under a
+      // button the user never pressed.
+      if (auto) console.error("[NowPlayingCard] auto rediscover failed", err);
+      else setError(getErrorMessage(err));
     } finally {
       setLoading(false);
+      discoverInFlightRef.current = false;
+
+      if (pendingRediscoverRef.current) {
+        pendingRediscoverRef.current = false;
+        getCurrPlaying({ auto: true });
+      }
     }
   }
 
+  // Keep the recommendation lists tied to whatever is actually playing. Only
+  // kicks in after the user has pressed Discover at least once — a fresh page
+  // load shows the Now Playing card alone until they ask for recommendations.
+  const songId = currSong?.songId ?? null;
   useEffect(() => {
-    let cancelled = false;
+    // Hold the last known id across a playback gap: Spotify briefly reports
+    // nothing between tracks, and forgetting the id there would swallow the
+    // rediscover for the track that comes back.
+    if (!songId) return;
 
-    async function loadCurrentTrack() {
-      setLoading(true);
-      setError(null);
+    const previousSongId = previousSongIdRef.current;
+    previousSongIdRef.current = songId;
 
-      try {
-        const data = await fetchCurrentTrack();
-        if (cancelled) return;
+    if (!previousSongId || songId === previousSongId) return;
+    if (songRecommendations.length === 0) return;
 
-        if ("noActivePlayback" in data) {
-          dispatch(setNoActivePlayback());
-        } else {
-          dispatch(setCurrSong(data.currSong));
-          dispatch(setPlaybackState({ ...data.playback, lastSyncedAt: Date.now() }));
-        }
-      } catch (err) {
-        if (!cancelled) setError(getErrorMessage(err));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    loadCurrentTrack();
-    return () => {
-      cancelled = true;
-    };
-  }, [dispatch]);
-
-  // Background resync: corrects drift in the client-side ticking progress bar every
-  // ~5s while something is playing. Failures are swallowed — a background resync
-  // must never surface a UI error.
-  useEffect(() => {
-    if (!currSong) return;
-
-    const intervalId = setInterval(async () => {
-      try {
-        const data = await fetchCurrentTrack();
-        if ("noActivePlayback" in data) {
-          dispatch(setNoActivePlayback());
-        } else {
-          dispatch(setCurrSong(data.currSong));
-          dispatch(setPlaybackState({ ...data.playback, lastSyncedAt: Date.now() }));
-        }
-      } catch {
-        // Swallow — see comment above.
-      }
-    }, 5_000);
-
-    return () => clearInterval(intervalId);
-  }, [currSong, dispatch]);
+    getCurrPlaying({ auto: true });
+    // Deliberately keyed on the track id alone: songRecommendations is a guard
+    // read at fire time, not a trigger, and re-running on it would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [songId]);
 
   return (
     <section className="flex flex-col gap-5">
@@ -134,7 +129,7 @@ function NowPlayingCard() {
       </GlassPanel>
 
       <DiscoverButton
-        onDiscover={getCurrPlaying}
+        onDiscover={() => getCurrPlaying()}
         loading={loading}
         noActivePlayback={noActivePlayback}
         error={error}

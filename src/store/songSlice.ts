@@ -1,15 +1,17 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { Dispatch } from "@reduxjs/toolkit";
+import { fetchCurrentTrack } from "@/lib/currentTrack";
 import type { CurrSong, DiscoverSuccess, SpotifyArtist, SpotifyTrack } from "@/types/spotify";
 
-// Real Spotify playback control state — separate axis from CurrSong (stable track
-// metadata). progressMs/lastSyncedAt let the UI tick a live position between
+// Real Spotify playback control state
+// progressMs/lastSyncedAt let the UI tick a live position between
 // authoritative resyncs instead of polling every second.
 export interface PlaybackControlState {
   isPlaying: boolean;
   progressMs: number;
   lastSyncedAt: number; // client Date.now() when progressMs was last authoritative
   deviceAvailable: boolean;
-  premiumRequired: boolean; // sticky until a control call succeeds
+  premiumRequired: boolean;
 }
 
 export interface SongState {
@@ -54,7 +56,7 @@ export const songSlice = createSlice({
       state.currSong = action.payload;
       state.noActivePlayback = false;
     },
-    // Authoritative resync from a /me/player-backed fetch (mount, 20s interval, post-skip).
+    // Authoritative resync from a /me/player-backed fetch (see syncNowPlaying below).
     // Preserves the existing premiumRequired flag — a GET proves nothing either way.
     setPlaybackState: (
       state,
@@ -99,6 +101,58 @@ export const {
   setDeviceAvailable,
   setPremiumRequired,
 } = songSlice.actions;
+
+// Spotify's player state is eventually consistent: a GET issued right after a skip
+// usually still returns the previous track, so syncAfterSkip retries a few times.
+const SKIP_SYNC_RETRY_MS = 350;
+const SKIP_SYNC_MAX_ATTEMPTS = 4;
+
+/**
+ * Authoritative resync from /me/player. Every caller — the playback poll, the
+ * end-of-track trigger, the post-skip retry — wants the same three dispatches.
+ * Resolves to the synced song id (null when nothing is playing) so callers can
+ * tell whether the track actually changed, or undefined when the fetch failed.
+ */
+export const syncNowPlaying =
+  () =>
+  async (dispatch: Dispatch): Promise<string | null | undefined> => {
+    try {
+      const data = await fetchCurrentTrack();
+
+      if ("noActivePlayback" in data) {
+        dispatch(setNoActivePlayback());
+        return null;
+      }
+
+      dispatch(setCurrSong(data.currSong));
+      dispatch(setPlaybackState({ ...data.playback, lastSyncedAt: Date.now() }));
+      return data.currSong.songId;
+    } catch {
+      return undefined;
+    }
+  };
+
+/**
+ * Resyncs after a next/previous command, retrying until Spotify reports a
+ * different track. `previous` can legitimately return the same track (Spotify
+ * restarts the current one when more than 3s in), in which case this just
+ * exhausts its attempts — harmless, and every attempt still applies the
+ * progress reset.
+ */
+export const syncAfterSkip =
+  (previousSongId: string | null) =>
+  async (dispatch: Dispatch): Promise<void> => {
+    for (let attempt = 0; attempt < SKIP_SYNC_MAX_ATTEMPTS; attempt++) {
+      if (attempt > 0) {
+        await new Promise((resolve) => setTimeout(resolve, SKIP_SYNC_RETRY_MS));
+      }
+
+      const songId = await syncNowPlaying()(dispatch);
+      // undefined means the fetch failed — keep retrying rather than treating it
+      // as a track change.
+      if (songId !== undefined && songId !== previousSongId) return;
+    }
+  };
 
 export const selectSong = (state: { song: SongState }) => state.song.currSong;
 export const selectSongRecommendations = (state: { song: SongState }) => state.song.songRecommendations;

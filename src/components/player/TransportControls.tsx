@@ -4,15 +4,14 @@ import { useState } from "react";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
+  selectSong,
   selectPlayback,
   selectControlsDisabled,
   setPlaybackState,
   setDeviceAvailable,
   setPremiumRequired,
-  setCurrSong,
-  setNoActivePlayback,
+  syncAfterSkip,
 } from "@/store/songSlice";
-import { fetchCurrentTrack } from "@/lib/currentTrack";
 
 import IconButton from "../ui/IconButton";
 
@@ -21,10 +20,11 @@ type Pending = "playPause" | "previous" | "next" | null;
 /**
  * Real transport row beneath the album art: play/pause and skip act on the user's
  * active Spotify device. Derives its state from Redux (`selectPlayback`) rather than
- * local state, so it stays in sync with the resync timer in NowPlayingCard.
+ * local state, so it stays in sync with the polling in `usePlaybackSync`.
  */
 function TransportControls() {
   const dispatch = useAppDispatch();
+  const currSong = useAppSelector(selectSong);
   const playback = useAppSelector(selectPlayback);
   const controlsDisabled = useAppSelector(selectControlsDisabled);
 
@@ -118,14 +118,9 @@ function TransportControls() {
       const ok = await handleControlResponse(response);
       if (!ok) return;
 
-      // Spotify's next/previous endpoints return 204 with no track info, so refetch.
-      const data = await fetchCurrentTrack();
-      if ("noActivePlayback" in data) {
-        dispatch(setNoActivePlayback());
-      } else {
-        dispatch(setCurrSong(data.currSong));
-        dispatch(setPlaybackState({ ...data.playback, lastSyncedAt: Date.now() }));
-      }
+      // Spotify's next/previous endpoints return 204 with no track info, and its
+      // player state lags the command, so resync until the track actually changes.
+      await dispatch(syncAfterSkip(currSong?.songId ?? null));
     } catch (err) {
       console.error("[TransportControls] skip failed", err);
     } finally {
