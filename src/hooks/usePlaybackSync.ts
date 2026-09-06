@@ -9,12 +9,12 @@ import { selectPlayback, selectSong, syncNowPlaying } from "@/store/songSlice";
 // app shows up almost immediately, slow enough to stay well inside rate limits.
 const POLL_INTERVAL_MS = 5_000;
 // A resync fired at the exact moment a track ends still sees the old track, so
-// give Spotify a beat to advance to the next one.
+// give Spotify a second to advance to the next one.
 const END_OF_TRACK_GRACE_MS = 1_000;
 
 /**
  * Owns every automatic resync of the Now Playing card: a steady poll, a precise
- * end-of-track trigger, and a resync when the tab regains focus. Mounted once,
+ * end-of-track trigger, and a resync when the track is changed. Mounted once,
  * by NowPlayingCard.
  */
 export function usePlaybackSync() {
@@ -74,7 +74,6 @@ export function usePlaybackSync() {
     const elapsedMs = playback.progressMs + (Date.now() - playback.lastSyncedAt);
     const delay = Math.max(currSong.durationMs - elapsedMs, 0) + END_OF_TRACK_GRACE_MS;
     
-    // If the current song is going to end AFTER the next poll from above, wait for the poll
     if (delay > POLL_INTERVAL_MS + END_OF_TRACK_GRACE_MS) return;
 
     const timeoutId = setTimeout(() => {

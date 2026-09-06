@@ -31,7 +31,7 @@ function NowPlayingCard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Keeps currSong/playback in step with the real player: mount fetch, 5s poll,
+  // Keeps current track in sync with the real player: mount fetch, 5s poll,
   // end-of-track trigger and refocus resync all live in here.
   usePlaybackSync();
 
@@ -39,7 +39,7 @@ function NowPlayingCard() {
   const discoverInFlightRef = useRef(false);
   const pendingRediscoverRef = useRef(false);
 
-  async function getCurrPlaying({ auto = false }: { auto?: boolean } = {}) {
+  async function runDiscover({ auto = false }: { auto?: boolean } = {}) {
     // Rapid skipping can outrun a single request — queue one re-run instead of
     // stacking a discover call per track.
     if (discoverInFlightRef.current) {
@@ -78,7 +78,7 @@ function NowPlayingCard() {
 
       if (pendingRediscoverRef.current) {
         pendingRediscoverRef.current = false;
-        getCurrPlaying({ auto: true });
+        runDiscover({ auto: true });
       }
     }
   }
@@ -88,9 +88,6 @@ function NowPlayingCard() {
   // load shows the Now Playing card alone until they ask for recommendations.
   const songId = currSong?.songId ?? null;
   useEffect(() => {
-    // Hold the last known id across a playback gap: Spotify briefly reports
-    // nothing between tracks, and forgetting the id there would swallow the
-    // rediscover for the track that comes back.
     if (!songId) return;
 
     const previousSongId = previousSongIdRef.current;
@@ -99,9 +96,7 @@ function NowPlayingCard() {
     if (!previousSongId || songId === previousSongId) return;
     if (songRecommendations.length === 0) return;
 
-    getCurrPlaying({ auto: true });
-    // Deliberately keyed on the track id alone: songRecommendations is a guard
-    // read at fire time, not a trigger, and re-running on it would loop.
+    runDiscover({ auto: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [songId]);
 
@@ -129,7 +124,7 @@ function NowPlayingCard() {
       </GlassPanel>
 
       <DiscoverButton
-        onDiscover={() => getCurrPlaying()}
+        onDiscover={() => runDiscover()}
         loading={loading}
         noActivePlayback={noActivePlayback}
         error={error}

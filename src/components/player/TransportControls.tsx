@@ -18,7 +18,7 @@ import IconButton from "../ui/IconButton";
 type Pending = "playPause" | "previous" | "next" | null;
 
 /**
- * Real transport row beneath the album art: play/pause and skip act on the user's
+ * Control panel of the current track: play/pause and skip act on the user's
  * active Spotify device. Derives its state from Redux (`selectPlayback`) rather than
  * local state, so it stays in sync with the polling in `usePlaybackSync`.
  */
@@ -53,6 +53,7 @@ function TransportControls() {
     return true;
   }
 
+  // Play / Pause logic
   async function togglePlayPause() {
     if (!playback || pending) return;
 
@@ -104,6 +105,7 @@ function TransportControls() {
     }
   }
 
+  // Skip to prev / next song
   async function skip(direction: "next" | "previous") {
     if (pending) return;
 
