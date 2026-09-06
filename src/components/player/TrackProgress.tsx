@@ -20,7 +20,7 @@ const PLACEHOLDER_DURATION_MS = 210_000; // 3:30
 
 /**
  * Real scrubber beneath the transport row. Ticks a live position between
- * authoritative resyncs (see NowPlayingCard's 20s interval), and seeking on
+ * authoritative resyncs (see `usePlaybackSync`), and seeking on
  * release calls Spotify directly. No network traffic while dragging.
  */
 function TrackProgress() {
