@@ -95,7 +95,9 @@
 
 /* GlassBackdrop's two fixed layers. The blobs carry the only saturated
    colour on the page — they're what the glass panels refract, so they're
-   blurred as a group (one filter, no per-blob edge seams). */
+   blurred as a group (one filter, no per-blob edge seams). The group's
+   opacity is the intensity dial: turn that first, and only reach for the
+   per-blob chroma below if the wash still competes with the panels. */
 [data-layer="gradient"] {
   background-image: linear-gradient(
     165deg,
@@ -107,7 +109,7 @@
 
 [data-layer="blobs"] {
   filter: blur(90px);
-  opacity: 0.55;
+  opacity: 0.2;
 }
 
 [data-layer="blobs"] > :nth-child(1) {
@@ -122,8 +124,9 @@
   background: oklch(0.82 0.14 195);
 }
 
-/* Account drop-down. RAC drives [data-entering]/[data-exiting] on the popover
-   and holds the unmount until the exit animation finishes. */
+/* Shared enter/exit for the account drop-down, the song-row … menu and the
+   playlist modal card. RAC drives [data-entering]/[data-exiting] and holds the
+   unmount until the exit animation finishes. */
 @keyframes menu-in {
   from {
     opacity: 0;
@@ -146,13 +149,22 @@
   }
 }
 
-/* Preview equaliser bars on an actively playing song row. */
-@keyframes sr-bar {
-  0%,
-  100% {
-    transform: scaleY(0.5);
+/* The playlist modal's scrim. Fading opacity fades the backdrop-filter with it,
+   so the page blurs in progressively rather than snapping. */
+@keyframes overlay-in {
+  from {
+    opacity: 0;
   }
-  50% {
-    transform: scaleY(1);
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
