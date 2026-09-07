@@ -117,9 +117,9 @@ function AddToPlaylistModal({ track, isOpen, onOpenChange }: AddToPlaylistModalP
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       isDismissable
-      className="fixed inset-0 z-[100] flex items-center justify-center"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-scrim backdrop-blur-[10px] entering:[animation:overlay-in_0.2s_ease-out] exiting:[animation:overlay-out_0.15s_ease-in]"
     >
-      <Modal className="flex max-h-[80vh] w-[450px] flex-col gap-[18px] overflow-auto rounded-card p-7">
+      <Modal className="glass-menu flex max-h-[80vh] w-[450px] flex-col gap-[18px] overflow-auto rounded-card p-7 entering:[animation:menu-in_0.2s_var(--ease-slide)] exiting:[animation:menu-out_0.15s_ease-in]">
         <Dialog className="flex flex-col gap-[18px] outline-none">
           {({ close }) => (
             <>
@@ -127,24 +127,28 @@ function AddToPlaylistModal({ track, isOpen, onOpenChange }: AddToPlaylistModalP
                 <Heading slot="title" className="font-display text-[17px] font-semibold">
                   Add to playlist
                 </Heading>
-                <Button aria-label="Close" onPress={close} className="size-7 rounded-full">
+                <Button
+                  aria-label="Close"
+                  onPress={close}
+                  className="flex size-7 cursor-pointer items-center justify-center rounded-full border border-hairline-hi bg-glass text-base leading-none text-ink-4 shadow-control hover:bg-glass-hover pressed:bg-glass-hover"
+                >
                   ×
                 </Button>
               </div>
 
-              <p className="text-[13px]">
+              <p className="text-[13px] text-ink-4">
                 {track.name} — {track.artists[0]?.name}
               </p>
 
               <ul className="flex list-none flex-col gap-0.5 p-0">
                 {loadingPlaylists ? (
-                  <li className="p-3 text-sm">Loading…</li>
+                  <li className="p-3 text-sm text-ink-4">Loading…</li>
                 ) : playlistsError ? (
-                  <li role="alert" className="p-3 text-sm">
+                  <li role="alert" className="p-3 text-sm text-danger">
                     {playlistsError}
                   </li>
                 ) : playlists.length === 0 ? (
-                  <li className="p-3 text-sm">No playlists yet.</li>
+                  <li className="p-3 text-sm text-ink-4">No playlists yet.</li>
                 ) : (
                   playlists.map((playlist) => {
                     const isAdded = addedIds.has(playlist.id);
@@ -152,17 +156,21 @@ function AddToPlaylistModal({ track, isOpen, onOpenChange }: AddToPlaylistModalP
                       <li key={playlist.id}>
                         <Button
                           onPress={() => addToPlaylist(playlist.id)}
-                          className="flex w-full items-center justify-between rounded-row p-3 text-left"
+                          className="flex w-full cursor-pointer items-center justify-between rounded-row p-3 text-left transition duration-150 hover:bg-glass-hover pressed:bg-glass-hover"
                         >
                           <span className="flex flex-col">
-                            <span className="text-sm">{playlist.name}</span>
-                            <span className="text-xs">
+                            <span className="text-sm font-medium text-ink">{playlist.name}</span>
+                            <span className="text-xs text-ink-4">
                               {playlist.tracks.total} tracks
                             </span>
                           </span>
                           <span
                             aria-hidden="true"
-                            className="flex size-[27px] flex-none items-center justify-center rounded-full text-[13px]"
+                            className={`flex size-[27px] flex-none items-center justify-center rounded-full text-[13px] shadow-control ${
+                              isAdded
+                                ? "accent-gloss text-white"
+                                : "border border-hairline-hi bg-glass text-ink-3"
+                            }`}
                           >
                             {isAdded ? "✓" : "+"}
                           </span>
@@ -176,7 +184,7 @@ function AddToPlaylistModal({ track, isOpen, onOpenChange }: AddToPlaylistModalP
                 )}
               </ul>
 
-              <hr className="h-px border-0" />
+              <hr className="h-px border-0 bg-divider" />
 
               <form onSubmit={createPlaylistAndAdd} className="flex gap-2.5">
                 <TextField
@@ -187,20 +195,20 @@ function AddToPlaylistModal({ track, isOpen, onOpenChange }: AddToPlaylistModalP
                   <Label className="sr-only">New playlist name</Label>
                   <Input
                     placeholder="New playlist name"
-                    className="w-full rounded-chip px-3.5 py-2.5 text-sm outline-none"
+                    className="w-full rounded-chip border border-hairline-hi bg-glass px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-ink-5 focus:border-accent"
                   />
                 </TextField>
                 <Button
                   type="submit"
                   isDisabled={creating || !newPlaylistName.trim()}
-                  className="whitespace-nowrap rounded-chip px-5 py-2.5 text-[13px] font-semibold disabled:cursor-default"
+                  className="accent-gloss cursor-pointer whitespace-nowrap rounded-chip px-5 py-2.5 text-[13px] font-semibold text-white shadow-control transition duration-150 hover:brightness-105 pressed:brightness-95 disabled:cursor-default disabled:opacity-60"
                 >
                   {creating ? "Creating…" : "Create"}
                 </Button>
               </form>
 
               {statusMessage && (
-                <p role="status" className="text-[13px]">
+                <p role="status" className="text-[13px] text-ink-4">
                   {statusMessage}
                 </p>
               )}

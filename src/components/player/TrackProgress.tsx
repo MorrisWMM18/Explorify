@@ -102,7 +102,7 @@ function TrackProgress() {
     >
       <SliderTrack className="h-[5px] rounded-full bg-divider">
         <SliderFill className="h-full rounded-full accent-gloss" />
-        <SliderThumb className="size-3 rounded-full bg-accent shadow-control dragging:scale-110" />
+        <SliderThumb className="top-1/2 size-3 rounded-full bg-accent shadow-control dragging:scale-110" />
       </SliderTrack>
 
       <div className="flex items-center justify-between text-xs text-ink-4">

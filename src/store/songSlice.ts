@@ -19,7 +19,6 @@ export interface SongState {
   songRecommendations: SpotifyTrack[];
   artistRecommendations: SpotifyArtist[];
   noActivePlayback: boolean;
-  nowPlayingTrackId: string | null;
   playback: PlaybackControlState | null;
 }
 
@@ -28,8 +27,6 @@ const initialState: SongState = {
   songRecommendations: [],
   artistRecommendations: [],
   noActivePlayback: false,
-  // Shared "now playing" pointer so only one Song row's 30s preview plays at a time.
-  nowPlayingTrackId: null,
   playback: null,
 };
 
@@ -48,9 +45,6 @@ export const songSlice = createSlice({
       state.noActivePlayback = true;
       state.currSong = null;
       state.playback = null;
-    },
-    setNowPlayingTrack: (state, action: PayloadAction<string | null>) => {
-      state.nowPlayingTrackId = action.payload;
     },
     setCurrSong: (state, action: PayloadAction<CurrSong>) => {
       state.currSong = action.payload;
@@ -94,7 +88,6 @@ export const songSlice = createSlice({
 export const {
   updateDiscoverResults,
   setNoActivePlayback,
-  setNowPlayingTrack,
   setCurrSong,
   setPlaybackState,
   setLocalPlaybackProgress,
@@ -158,7 +151,6 @@ export const selectSong = (state: { song: SongState }) => state.song.currSong;
 export const selectSongRecommendations = (state: { song: SongState }) => state.song.songRecommendations;
 export const selectArtistRecommendations = (state: { song: SongState }) => state.song.artistRecommendations;
 export const selectNoActivePlayback = (state: { song: SongState }) => state.song.noActivePlayback;
-export const selectNowPlayingTrackId = (state: { song: SongState }) => state.song.nowPlayingTrackId;
 export const selectPlayback = (state: { song: SongState }) => state.song.playback;
 export const selectControlsDisabled = (state: { song: SongState }) =>
   state.song.noActivePlayback ||
