@@ -45,6 +45,7 @@
 
   --blur-glass: 34px;
   --ease-slide: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* The glass recipe: fill + backdrop filter + hairline + shadow.
@@ -81,6 +82,15 @@
     var(--color-accent) 55%,
     color-mix(in oklab, var(--color-accent) 82%, black) 100%
   );
+}
+
+/* Content that swaps when new data lands — the now-playing track, the
+   recommendation lists — enters rather than snapping in. Replayed by remounting
+   on a data-derived key, since a CSS animation only runs on mount. */
+@utility fade-up {
+  /* `backwards` holds the from-state through a stagger delay, then releases —
+     unlike `forwards`/`both` it leaves no lingering transform behind. */
+  animation: fade-up 1s var(--ease-enter) backwards;
 }
 
 @layer base {
@@ -120,6 +130,17 @@
 
 [data-layer="blobs"] > :nth-child(3) {
   background: oklch(0.82 0.14 195);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Shared enter/exit for the account drop-down, the song-row … menu and the
@@ -164,5 +185,12 @@
   }
   to {
     opacity: 0;
+  }
+}
+
+/* Unlayered, so it wins over the utility above. */
+@media (prefers-reduced-motion: reduce) {
+  .fade-up {
+    animation: none;
   }
 }

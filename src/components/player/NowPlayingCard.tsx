@@ -104,15 +104,19 @@ function NowPlayingCard() {
     <section className="flex flex-col gap-5">
       <GlassPanel radius="card" className="grid grid-cols-[300px_1fr] gap-11 p-9">
         <div className="flex flex-col gap-[22px]">
-          <AlbumArt src={currSong?.songPicture ?? null} songName={currSong?.songName ?? null} />
+          <AlbumArt
+            key={songId ?? "empty"}
+            src={currSong?.songPicture ?? null}
+            songName={currSong?.songName ?? null}
+          />
           <TransportControls />
           <TrackProgress />
         </div>
 
         {currSong ? (
-          <TrackMeta currSong={currSong} />
+          <TrackMeta key={currSong.songId} currSong={currSong} />
         ) : (
-          <div className="flex flex-col justify-center gap-2">
+          <div className="fade-up flex flex-col justify-center gap-2">
             <h1 className="font-display text-[34px] font-semibold leading-[1.1]">
               Welcome to Explorify
             </h1>
