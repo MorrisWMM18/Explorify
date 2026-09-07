@@ -113,9 +113,6 @@ function AddToPlaylistModal({ track, isOpen, onOpenChange }: AddToPlaylistModalP
   }
 
   return (
-    // The scrim + backdrop-blur are what push the whole app behind the dialog.
-    // RAC portals this to <body>, so it sits outside AppShell's stacking context
-    // and blurs the header along with the content.
     <ModalOverlay
       isOpen={isOpen}
       onOpenChange={onOpenChange}

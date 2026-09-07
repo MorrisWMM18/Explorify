@@ -102,8 +102,6 @@ function TrackProgress() {
     >
       <SliderTrack className="h-[5px] rounded-full bg-divider">
         <SliderFill className="h-full rounded-full accent-gloss" />
-        {/* react-aria positions the thumb with `left` + translate(-50%, -50%) but never
-            sets `top`, so without top-1/2 it centres on the track's top edge, not its middle. */}
         <SliderThumb className="top-1/2 size-3 rounded-full bg-accent shadow-control dragging:scale-110" />
       </SliderTrack>
 
