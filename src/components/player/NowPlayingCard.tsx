@@ -7,13 +7,11 @@ import {
   selectSongRecommendations,
   selectNoActivePlayback,
   updateDiscoverResults,
-  setNoActivePlayback,
-  setPlaybackState,
 } from "@/store/songSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { usePlaybackSync } from "@/hooks/usePlaybackSync";
 import { getErrorMessage } from "@/lib/errors";
-import type { DiscoverResponse } from "@/types/spotify";
+import type { DiscoverRequest, DiscoverResponse } from "@/types/spotify";
 
 import GlassPanel from "../ui/GlassPanel";
 import AlbumArt from "./AlbumArt";
@@ -39,7 +37,21 @@ function NowPlayingCard() {
   const discoverInFlightRef = useRef(false);
   const pendingRediscoverRef = useRef(false);
 
+  // runDiscover can be re-entered from its own `finally` (the queued re-run) long
+  // after that call's closure was created, and the seed has to be the track that
+  // is playing *now*. This effect is declared before the auto-rediscover effect
+  // below so the ref is already fresh when that one fires.
+  const currSongRef = useRef(currSong);
+  useEffect(() => {
+    currSongRef.current = currSong;
+  }, [currSong]);
+
   async function runDiscover({ auto = false }: { auto?: boolean } = {}) {
+    // Discover seeds from whatever usePlaybackSync last synced; it no longer reads
+    // /me/player itself. No synced track means there is nothing to ask for.
+    const seed = currSongRef.current;
+    if (!seed) return;
+
     // Rapid skipping can outrun a single request — queue one re-run instead of
     // stacking a discover call per track.
     if (discoverInFlightRef.current) {
@@ -52,7 +64,15 @@ function NowPlayingCard() {
     setError(null);
 
     try {
-      const response = await fetch("/api/spotify/discover", { method: "POST" });
+      const requestBody: DiscoverRequest = {
+        artistId: seed.songArtistId,
+        trackId: seed.songId,
+      };
+      const response = await fetch("/api/spotify/discover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
       const data: DiscoverResponse = await response.json();
 
       if (!response.ok || "error" in data) {
@@ -61,12 +81,7 @@ function NowPlayingCard() {
         );
       }
 
-      if ("noActivePlayback" in data) {
-        dispatch(setNoActivePlayback());
-      } else {
-        dispatch(updateDiscoverResults(data));
-        dispatch(setPlaybackState({ ...data.playback, lastSyncedAt: Date.now() }));
-      }
+      dispatch(updateDiscoverResults(data));
     } catch (err) {
       // A background refresh failing is noise — don't paint an error under a
       // button the user never pressed.

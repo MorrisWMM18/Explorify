@@ -71,23 +71,27 @@ export interface SpotifySearchArtistsResponse {
 
 // ---- Bespoke app-level DTOs (NOT raw Spotify shapes) ----
 
-// POST /api/spotify/discover response shapes
-export interface DiscoverNoActivePlayback {
-  noActivePlayback: true;
+// POST /api/spotify/discover request body. The seed is what the client already
+// holds in Redux from /current-track, so discover never re-reads /me/player just
+// to learn what the caller already knows.
+export interface DiscoverRequest {
+  artistId: string;
+  trackId: string;
 }
 
+// POST /api/spotify/discover response shapes. currSong/playback are deliberately
+// absent: /current-track owns those, and discover is purely a recommendations
+// endpoint. Discriminated by key presence like the other unions here.
 export interface DiscoverSuccess {
-  currSong: CurrSong;
   songRecommendations: SpotifyTrack[];
   artistRecommendations: SpotifyArtist[];
-  playback: PlaybackStatus;
 }
 
 export interface DiscoverError {
   error: string;
 }
 
-export type DiscoverResponse = DiscoverNoActivePlayback | DiscoverSuccess | DiscoverError;
+export type DiscoverResponse = DiscoverSuccess | DiscoverError;
 
 // GET /api/spotify/artists/[artistId] response shapes.
 // Discriminated by key presence, like the unions above, so consumers keep
