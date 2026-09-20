@@ -26,8 +26,10 @@ const MARKET = "US";
 const MAX_SONG_RECOMMENDATIONS = 20;
 const MAX_ARTIST_RECOMMENDATIONS = 9;
 
-// Spotify ids are base62. The seed is client-supplied now and gets interpolated
+// Spotify ids are base62. artistId is client-supplied now and gets interpolated
 // into a Spotify path, so reject anything that isn't an id before using it.
+// trackId never reaches a path (it's only a filter comparand below), but it's
+// validated the same way as input hygiene.
 const SPOTIFY_ID = /^[A-Za-z0-9]{1,40}$/;
 
 function dedupeById<T extends { id?: string }>(items: T[]): T[] {
@@ -72,6 +74,11 @@ export async function POST(req: NextRequest): Promise<NextResponse<DiscoverRespo
     ]);
 
     const topGenre = genres[0];
+    if (!topGenre) {
+      // Either the artist genuinely has no genres tagged or getArtistGenres
+      // swallowed a failure — both leave artistRecommendations empty, so say so.
+      console.warn("[/api/spotify/discover] no genres for", artistId);
+    }
 
     // Best-effort genre augmentation: if Search behaves unexpectedly for a given
     // genre string, fall back to just the artist's own top tracks rather than

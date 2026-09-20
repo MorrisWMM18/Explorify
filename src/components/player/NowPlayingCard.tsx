@@ -81,7 +81,9 @@ function NowPlayingCard() {
         );
       }
 
-      dispatch(updateDiscoverResults(data));
+      // A newer track is already queued — don't paint results for the track that
+      // was playing when this call started.
+      if (!pendingRediscoverRef.current) dispatch(updateDiscoverResults(data));
     } catch (err) {
       // A background refresh failing is noise — don't paint an error under a
       // button the user never pressed.
