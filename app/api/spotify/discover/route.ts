@@ -56,12 +56,20 @@ export async function POST(req: NextRequest): Promise<NextResponse<DiscoverRespo
     body = null;
   }
 
+  // Post-validation this matches DiscoverRequest (src/types/spotify.ts); it's
+  // destructured as unknown here because the body is untrusted input.
   const { artistId, trackId } = (body ?? {}) as { artistId?: unknown; trackId?: unknown };
   if (typeof artistId !== "string" || !SPOTIFY_ID.test(artistId)) {
-    return NextResponse.json({ error: "A valid artistId is required." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Couldn't work out what's playing — skip to another track and try again." },
+      { status: 400 }
+    );
   }
   if (typeof trackId !== "string" || !SPOTIFY_ID.test(trackId)) {
-    return NextResponse.json({ error: "A valid trackId is required." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Couldn't work out what's playing — skip to another track and try again." },
+      { status: 400 }
+    );
   }
 
   try {
@@ -74,11 +82,6 @@ export async function POST(req: NextRequest): Promise<NextResponse<DiscoverRespo
     ]);
 
     const topGenre = genres[0];
-    if (!topGenre) {
-      // Either the artist genuinely has no genres tagged or getArtistGenres
-      // swallowed a failure — both leave artistRecommendations empty, so say so.
-      console.warn("[/api/spotify/discover] no genres for", artistId);
-    }
 
     // Best-effort genre augmentation: if Search behaves unexpectedly for a given
     // genre string, fall back to just the artist's own top tracks rather than

@@ -81,9 +81,10 @@ function NowPlayingCard() {
         );
       }
 
-      // A newer track is already queued — don't paint results for the track that
-      // was playing when this call started.
-      if (!pendingRediscoverRef.current) dispatch(updateDiscoverResults(data));
+      // Skip only when a newer track is queued AND that re-run can actually seed
+      // itself — otherwise nothing would ever replace these results.
+      const willRerun = pendingRediscoverRef.current && currSongRef.current !== null;
+      if (!willRerun) dispatch(updateDiscoverResults(data));
     } catch (err) {
       // A background refresh failing is noise — don't paint an error under a
       // button the user never pressed.
@@ -147,7 +148,7 @@ function NowPlayingCard() {
       <DiscoverButton
         onDiscover={() => runDiscover()}
         loading={loading}
-        ready={Boolean(currSong)}
+        ready={Boolean(currSong?.songArtistId)}
         noActivePlayback={noActivePlayback}
         error={error}
       />

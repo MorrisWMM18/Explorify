@@ -1,4 +1,5 @@
-import { spotifyFetch } from "@/lib/spotifyApi";
+import { spotifyFetch, SpotifyApiError } from "@/lib/spotifyApi";
+import { getErrorMessage } from "@/lib/errors";
 import type { SpotifyArtist } from "@/types/spotify";
 
 // Genres come from a separate /artists/{id} lookup, and both callers want them for
@@ -19,7 +20,15 @@ export async function getArtistGenres(accessToken: string, artistId: string): Pr
     const genres = artist?.genres ?? [];
     genreCache.set(artistId, { genres, cachedAt: Date.now() });
     return genres;
-  } catch {
+  } catch (error) {
+    const status = error instanceof SpotifyApiError ? error.status : 500;
+    console.error(
+      "[getArtistGenres]",
+      status,
+      error instanceof SpotifyApiError ? error.path : undefined,
+      getErrorMessage(error),
+      error instanceof SpotifyApiError ? error.rawBody : undefined
+    );
     // Best-effort: callers degrade to no genres rather than failing the whole
     // request. Not cached, so the next call retries.
     return [];
