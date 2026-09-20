@@ -5,6 +5,9 @@ import PillButton from "../ui/PillButton";
 interface DiscoverButtonProps {
   onDiscover: () => void;
   loading: boolean;
+  // False until the first playback sync resolves. Discover seeds itself from the
+  // synced track, so there is nothing to ask for until one exists.
+  ready: boolean;
   noActivePlayback: boolean;
   error: string | null;
 }
@@ -12,12 +15,17 @@ interface DiscoverButtonProps {
 function DiscoverButton({
   onDiscover,
   loading,
+  ready,
   noActivePlayback,
   error,
 }: DiscoverButtonProps) {
   return (
     <div className="flex flex-col items-start gap-4">
-      <PillButton onPress={onDiscover} isDisabled={loading} className="px-[30px] py-3.5">
+      <PillButton
+        onPress={onDiscover}
+        isDisabled={loading || !ready}
+        className="px-[30px] py-3.5"
+      >
         {loading ? "Loading…" : "Discover new songs"}
       </PillButton>
 

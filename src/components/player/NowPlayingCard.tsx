@@ -130,6 +130,7 @@ function NowPlayingCard() {
       <DiscoverButton
         onDiscover={() => runDiscover()}
         loading={loading}
+        ready={Boolean(currSong)}
         noActivePlayback={noActivePlayback}
         error={error}
       />
