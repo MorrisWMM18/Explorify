@@ -16,6 +16,11 @@ function ArtistCarousel() {
   const artistRecommendations = useAppSelector(selectArtistRecommendations);
   const slides = artistRecommendations.slice(0, VISIBLE_SLIDES);
   const count = slides.length;
+  // Same content-derived remount key the song list uses. It sits on the slide
+  // wrappers rather than the hover container (remounting that under the cursor
+  // swallows onMouseLeave and strands isPaused) or the track (whose inline
+  // translateX would fight the animation’s transform).
+  const listKey = slides.map((artist) => artist.id).join("-");
 
   const [index, setIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -84,8 +89,8 @@ function ArtistCarousel() {
           >
             {slides.map((artist) => (
               <div
-                key={artist.id}
-                className="px-2"
+                key={`${listKey}-${artist.id}`}
+                className="fade-up px-2"
                 style={{ flex: `0 0 ${100 / count}%` }}
               >
                 <ArtistCard artist={artist} />

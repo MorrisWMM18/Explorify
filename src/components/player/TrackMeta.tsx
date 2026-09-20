@@ -8,7 +8,7 @@ interface TrackMetaProps {
 /** Right-hand column of the Now Playing card: title and track metadata. */
 function TrackMeta({ currSong }: TrackMetaProps) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="fade-up flex flex-col gap-6">
       {/* Song name + Artist */}
       <div>
         <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.12em]">

@@ -12,9 +12,11 @@ import AddToPlaylistModal from "../playlists/AddToPlaylistModal";
 
 interface SongRowProps {
   track: SpotifyTrack;
+  /** Stagger offset for the list’s fade-up entrance. */
+  enterDelayMs?: number;
 }
 
-function SongRow({ track }: SongRowProps) {
+function SongRow({ track, enterDelayMs = 0 }: SongRowProps) {
   const router = useRouter();
 
   const [playbackError, setPlaybackError] = useState<string | null>(null);
@@ -45,7 +47,7 @@ function SongRow({ track }: SongRowProps) {
   }
 
   return (
-    <div>
+    <div className="fade-up" style={{ animationDelay: `${enterDelayMs}ms` }}>
       <div className="grid grid-cols-[48px_1fr_auto] items-center gap-3.5 rounded-row px-3 py-[9px] transition duration-150 hover:bg-glass-hover">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
