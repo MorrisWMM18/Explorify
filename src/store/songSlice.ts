@@ -35,11 +35,8 @@ export const songSlice = createSlice({
   initialState,
   reducers: {
     updateDiscoverResults: (state, action: PayloadAction<DiscoverSuccess>) => {
-      const { currSong, songRecommendations, artistRecommendations } = action.payload;
-      state.currSong = currSong;
-      state.songRecommendations = songRecommendations;
-      state.artistRecommendations = artistRecommendations;
-      state.noActivePlayback = false;
+      state.songRecommendations = action.payload.songRecommendations;
+      state.artistRecommendations = action.payload.artistRecommendations;
     },
     setNoActivePlayback: (state) => {
       state.noActivePlayback = true;

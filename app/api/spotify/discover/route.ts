@@ -1,19 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken, spotifyFetch, SpotifyApiError } from "@/lib/spotifyApi";
+import { getArtistGenres } from "@/lib/artistGenres";
 import { getErrorMessage } from "@/lib/errors";
 import type {
   DiscoverResponse,
   SpotifyArtist,
-  SpotifyCurrentlyPlaying,
   SpotifySearchArtistsResponse,
   SpotifySearchTracksResponse,
   SpotifyTopTracksResponse,
   SpotifyTrack,
 } from "@/types/spotify";
 
+// Endpoint that provides music and artist recommendations
+
 export const runtime = "nodejs";
 
 const MARKET = "US";
+
+// TODO: Move these two variables to project-wide env variable
+const MAX_SONG_RECOMMENDATIONS = 20;
+const MAX_ARTIST_RECOMMENDATIONS = 9;
+
+// Spotify ids are base62. artistId is client-supplied now and gets interpolated
+// into a Spotify path, so reject anything that isn't an id before using it.
+// trackId never reaches a path (it's only a filter comparand below), but it's
+// validated the same way as input hygiene.
+const SPOTIFY_ID = /^[A-Za-z0-9]{1,40}$/;
 
 function dedupeById<T extends { id?: string }>(items: T[]): T[] {
   const seen = new Set<string>();
@@ -32,21 +44,39 @@ export async function POST(req: NextRequest): Promise<NextResponse<DiscoverRespo
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
+  let body: unknown = null;
   try {
-    const playback = await spotifyFetch<SpotifyCurrentlyPlaying>(accessToken, "/me/player");
-    if (!playback || !playback.item) {
-      return NextResponse.json({ noActivePlayback: true });
-    }
+    body = await req.json();
+  } catch {
+    body = null;
+  }
 
-    const track = playback.item;
-    const artistId = track.artists[0].id;
+  // Post-validation this matches DiscoverRequest (src/types/spotify.ts); it's
+  // destructured as unknown here because the body is untrusted input.
+  const { artistId, trackId } = (body ?? {}) as { artistId?: unknown; trackId?: unknown };
+  if (typeof artistId !== "string" || !SPOTIFY_ID.test(artistId)) {
+    return NextResponse.json(
+      { error: "Couldn't work out what's playing — skip to another track and try again." },
+      { status: 400 }
+    );
+  }
+  if (typeof trackId !== "string" || !SPOTIFY_ID.test(trackId)) {
+    return NextResponse.json(
+      { error: "Couldn't work out what's playing — skip to another track and try again." },
+      { status: 400 }
+    );
+  }
 
-    const [artist, topTracksResponse] = await Promise.all([
-      spotifyFetch<SpotifyArtist>(accessToken, `/artists/${artistId}`),
-      spotifyFetch<SpotifyTopTracksResponse>(accessToken, `/artists/${artistId}/top-tracks?market=${MARKET}`),
+  try {
+    const [genres, topTracksResponse] = await Promise.all([
+      getArtistGenres(accessToken, artistId),
+      spotifyFetch<SpotifyTopTracksResponse>(
+        accessToken,
+        `/artists/${artistId}/top-tracks?market=${MARKET}`
+      ),
     ]);
 
-    const topGenre = artist?.genres?.[0];
+    const topGenre = genres[0];
 
     // Best-effort genre augmentation: if Search behaves unexpectedly for a given
     // genre string, fall back to just the artist's own top tracks rather than
@@ -78,33 +108,14 @@ export async function POST(req: NextRequest): Promise<NextResponse<DiscoverRespo
     }
 
     const songRecommendations = dedupeById([...(topTracksResponse?.tracks ?? []), ...genreTracks])
-      .filter((t) => t.id !== track.id)
-      .slice(0, 20);
+      .filter((track) => track.id !== trackId)
+      .slice(0, MAX_SONG_RECOMMENDATIONS);
 
     const artistRecommendations = dedupeById(genreArtists)
-      .filter((a) => a.id !== artistId)
-      .slice(0, 9);
+      .filter((artist) => artist.id !== artistId)
+      .slice(0, MAX_ARTIST_RECOMMENDATIONS);
 
-    return NextResponse.json({
-      currSong: {
-        songId: track.id,
-        songUri: track.uri,
-        songName: track.name,
-        songArtist: track.artists.map((a) => a.name).join(", "),
-        songArtistId: artistId,
-        songPicture: track.album.images[0]?.url ?? null,
-        durationMs: track.duration_ms,
-        releaseDate: track.album.release_date,
-        genres: artist?.genres ?? [],
-      },
-      songRecommendations,
-      artistRecommendations,
-      playback: {
-        isPlaying: playback.is_playing,
-        progressMs: playback.progress_ms ?? 0,
-        deviceAvailable: Boolean(playback.device?.id),
-      },
-    });
+    return NextResponse.json({ songRecommendations, artistRecommendations });
   } catch (error) {
     const status = error instanceof SpotifyApiError ? error.status : 500;
     const message =

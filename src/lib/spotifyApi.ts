@@ -40,6 +40,7 @@ export async function getSpotifySession(
   return { accessToken: token.accessToken, spotifyId: token.spotifyId };
 }
 
+// Only function to interact with Spotify API
 export async function spotifyFetch<T = unknown>(
   accessToken: string,
   path: string,
