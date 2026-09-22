@@ -11,18 +11,13 @@ import type {
   SpotifyTrack,
 } from "@/types/spotify";
 
-// Recommendations only. What's currently playing is /current-track's job — this
-// route is handed the seed it produced rather than re-reading /me/player.
-//
-// Deliberately does not call /recommendations, /related-artists or
-// /audio-features: Spotify deprecated all three on 2024-11-27 for any app not
-// already in Extended Quota Mode before that date, and there is no application
-// path to get them back. Artist top tracks plus genre-filtered Search return the
-// same Track/Artist object shapes those endpoints used to.
+// Endpoint that provides music and artist recommendations
 
 export const runtime = "nodejs";
 
 const MARKET = "US";
+
+// TODO: Move these two variables to project-wide env variable
 const MAX_SONG_RECOMMENDATIONS = 20;
 const MAX_ARTIST_RECOMMENDATIONS = 9;
 

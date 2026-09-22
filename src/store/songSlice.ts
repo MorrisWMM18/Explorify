@@ -34,9 +34,6 @@ export const songSlice = createSlice({
   name: "song",
   initialState,
   reducers: {
-    // Discover returns recommendations only. currSong / noActivePlayback / playback
-    // belong to syncNowPlaying — keeping a second writer here meant two independent
-    // /me/player snapshots racing into the same keys.
     updateDiscoverResults: (state, action: PayloadAction<DiscoverSuccess>) => {
       state.songRecommendations = action.payload.songRecommendations;
       state.artistRecommendations = action.payload.artistRecommendations;

@@ -1,112 +1,3 @@
-export interface SpotifyFollowers {
-  href: string | null;
-  total: number;
-}
-
-export interface SpotifyPagingObject<T> {
-  href: string;
-  items: T[];
-  limit: number;
-  next: string | null;
-  offset: number;
-  previous: string | null;
-  total: number;
-}
-
-// Artist Object (full) — GET /artists/{id}, search (type=artist)
-export interface SpotifyArtist {
-  external_urls: SpotifyExternalUrls;
-  followers?: SpotifyFollowers;
-  genres: string[];
-  href: string;
-  id: string;
-  images?: SpotifyImage[];
-  name: string;
-  popularity?: number;
-  type: "artist";
-  uri: string;
-}
-
-// Simplified User Object — as embedded in Playlist objects
-export interface SpotifyPlaylistOwner {
-  external_urls: SpotifyExternalUrls;
-  href: string;
-  id: string;
-  type: "user";
-  uri: string;
-  display_name?: string | null;
-}
-
-// Simplified Playlist Object — GET /me/playlists items, POST .../playlists response
-export interface SpotifySimplifiedPlaylist {
-  collaborative: boolean;
-  description: string | null;
-  external_urls: SpotifyExternalUrls;
-  href: string;
-  id: string;
-  images: SpotifyImage[];
-  name: string;
-  owner: SpotifyPlaylistOwner;
-  public: boolean | null;
-  snapshot_id: string;
-  tracks: { href: string; total: number };
-  type: "playlist";
-  uri: string;
-}
-
-// GET /artists/{id}/top-tracks
-export interface SpotifyTopTracksResponse {
-  tracks: SpotifyTrack[];
-}
-
-// GET /search?type=track
-export interface SpotifySearchTracksResponse {
-  tracks: SpotifyPagingObject<SpotifyTrack>;
-}
-
-// GET /search?type=artist
-export interface SpotifySearchArtistsResponse {
-  artists: SpotifyPagingObject<SpotifyArtist>;
-}
-
-// ---- Bespoke app-level DTOs (NOT raw Spotify shapes) ----
-
-// POST /api/spotify/discover request body. The seed is what the client already
-// holds in Redux from /current-track, so discover never re-reads /me/player just
-// to learn what the caller already knows.
-export interface DiscoverRequest {
-  artistId: string;
-  trackId: string;
-}
-
-// POST /api/spotify/discover response shapes. currSong/playback are deliberately
-// absent: /current-track owns those, and discover is purely a recommendations
-// endpoint. Discriminated by key presence like the other unions here.
-export interface DiscoverSuccess {
-  songRecommendations: SpotifyTrack[];
-  artistRecommendations: SpotifyArtist[];
-}
-
-export interface DiscoverError {
-  error: string;
-}
-
-export type DiscoverResponse = DiscoverSuccess | DiscoverError;
-
-// GET /api/spotify/artists/[artistId] response shapes.
-// Discriminated by key presence, like the unions above, so consumers keep
-// narrowing with `"error" in data`.
-export interface ArtistDetailSuccess {
-  artist: SpotifyArtist;
-  topTracks: SpotifyTrack[];
-}
-
-export interface ArtistDetailError {
-  error: string;
-}
-
-export type ArtistDetailResponse = ArtistDetailSuccess | ArtistDetailError;
-
 /** -------------------------
  * Spotify API schemas
  ----------------------------*/
@@ -207,6 +98,76 @@ export interface SpotifyImage {
   width: number | null;
 }
 
+export interface SpotifyFollowers {
+  href: string | null;
+  total: number;
+}
+
+export interface SpotifyPagingObject<T> {
+  href: string;
+  items: T[];
+  limit: number;
+  next: string | null;
+  offset: number;
+  previous: string | null;
+  total: number;
+}
+
+// Artist Object (full) — GET /artists/{id}, search (type=artist)
+export interface SpotifyArtist {
+  external_urls: SpotifyExternalUrls;
+  followers?: SpotifyFollowers;
+  genres: string[];
+  href: string;
+  id: string;
+  images?: SpotifyImage[];
+  name: string;
+  popularity?: number;
+  type: "artist";
+  uri: string;
+}
+
+export interface SpotifyPlaylistOwner {
+  external_urls: SpotifyExternalUrls;
+  href: string;
+  id: string;
+  type: "user";
+  uri: string;
+  display_name?: string | null;
+}
+
+// Simplified Playlist Object — GET /me/playlists items, POST .../playlists response
+export interface SpotifySimplifiedPlaylist {
+  collaborative: boolean;
+  description: string | null;
+  external_urls: SpotifyExternalUrls;
+  href: string;
+  id: string;
+  images: SpotifyImage[];
+  name: string;
+  owner: SpotifyPlaylistOwner;
+  public: boolean | null;
+  snapshot_id: string;
+  tracks: { href: string; total: number };
+  type: "playlist";
+  uri: string;
+}
+
+// GET /artists/{id}/top-tracks
+export interface SpotifyTopTracksResponse {
+  tracks: SpotifyTrack[];
+}
+
+// GET /search?type=track
+export interface SpotifySearchTracksResponse {
+  tracks: SpotifyPagingObject<SpotifyTrack>;
+}
+
+// GET /search?type=artist
+export interface SpotifySearchArtistsResponse {
+  artists: SpotifyPagingObject<SpotifyArtist>;
+}
+
 /** ---------------------------------------------
  * Custom Explorify backend endpoint schemas
  ------------------------------------------------*/
@@ -247,3 +208,33 @@ export type CurrentTrackResponse =
   | CurrentTrackSuccess
   | CurrentTrackNoActivePlayback
   | CurrentTrackError;
+
+// POST /api/spotify/discover request body
+export interface DiscoverRequest {
+  artistId: string;
+  trackId: string;
+}
+
+export interface DiscoverSuccess {
+  songRecommendations: SpotifyTrack[];
+  artistRecommendations: SpotifyArtist[];
+}
+
+export interface DiscoverError {
+  error: string;
+}
+
+// POST /api/spotify/discover sucess response shape
+export type DiscoverResponse = DiscoverSuccess | DiscoverError;
+
+export interface ArtistDetailSuccess {
+  artist: SpotifyArtist;
+  topTracks: SpotifyTrack[];
+}
+
+export interface ArtistDetailError {
+  error: string;
+}
+
+// GET /api/spotify/artists/[artistId] response shape
+export type ArtistDetailResponse = ArtistDetailSuccess | ArtistDetailError;

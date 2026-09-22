@@ -37,18 +37,12 @@ function NowPlayingCard() {
   const discoverInFlightRef = useRef(false);
   const pendingRediscoverRef = useRef(false);
 
-  // runDiscover can be re-entered from its own `finally` (the queued re-run) long
-  // after that call's closure was created, and the seed has to be the track that
-  // is playing *now*. This effect is declared before the auto-rediscover effect
-  // below so the ref is already fresh when that one fires.
   const currSongRef = useRef(currSong);
   useEffect(() => {
     currSongRef.current = currSong;
   }, [currSong]);
 
   async function runDiscover({ auto = false }: { auto?: boolean } = {}) {
-    // Discover seeds from whatever usePlaybackSync last synced; it no longer reads
-    // /me/player itself. No synced track means there is nothing to ask for.
     const seed = currSongRef.current;
     if (!seed) return;
 

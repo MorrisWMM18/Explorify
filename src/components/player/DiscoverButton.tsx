@@ -5,8 +5,7 @@ import PillButton from "../ui/PillButton";
 interface DiscoverButtonProps {
   onDiscover: () => void;
   loading: boolean;
-  // False until the first playback sync resolves. Discover seeds itself from the
-  // synced track, so there is nothing to ask for until one exists.
+  // False until Explorify is able to sync what the user is playing
   ready: boolean;
   noActivePlayback: boolean;
   error: string | null;
