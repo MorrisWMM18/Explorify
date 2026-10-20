@@ -27,7 +27,7 @@ function ArtistCard({ artist }: ArtistCardProps) {
         className="size-[140px] flex-none rounded-full object-cover"
       />
       <span className="font-display text-[19px] font-semibold">{artist.name}</span>
-      <span className="text-[13px]">{artist.genres[0] ?? ""}</span>
+      <span className="text-[13px]">{artist.genres?.[0] ?? ""}</span>
     </Button>
   );
 }
