@@ -117,7 +117,7 @@ export interface SpotifyPagingObject<T> {
 export interface SpotifyArtist {
   external_urls: SpotifyExternalUrls;
   followers?: SpotifyFollowers;
-  genres: string[];
+  genres?: string[] | null; // deprecated by Spotify; may be missing or null
   href: string;
   id: string;
   images?: SpotifyImage[];
