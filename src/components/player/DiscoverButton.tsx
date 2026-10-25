@@ -23,7 +23,7 @@ function DiscoverButton({
       <PillButton
         onPress={onDiscover}
         isDisabled={loading || !ready}
-        className="px-[30px] py-3.5"
+        className="w-full px-[30px] py-3.5 md:w-auto"
       >
         {loading ? "Loading…" : "Discover new songs"}
       </PillButton>

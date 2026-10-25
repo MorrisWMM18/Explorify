@@ -15,11 +15,10 @@ import type { DiscoverRequest, DiscoverResponse } from "@/types/spotify";
 
 import GlassPanel from "../ui/GlassPanel";
 import AlbumArt from "./AlbumArt";
-import TrackMeta from "./TrackMeta";
+import { TrackHeading, TrackDetails } from "./TrackMeta";
 import DiscoverButton from "./DiscoverButton";
 import TransportControls from "./TransportControls";
 import TrackProgress from "./TrackProgress";
-import TrackActionsMenu from "../songs/TrackActionsMenu";
 
 function NowPlayingCard() {
   const dispatch = useAppDispatch();
@@ -115,40 +114,49 @@ function NowPlayingCard() {
 
   return (
     <section className="flex flex-col gap-5">
-      <GlassPanel radius="card" className="relative grid grid-cols-[300px_1fr] gap-11 p-9">
-        {currSong?.songId && (
-          <TrackActionsMenu
-            key={currSong.songId}
-            trackUri={currSong.songUri}
-            trackName={currSong.songName}
-            artistName={currSong.songArtist}
-            artistId={currSong.songArtistId || null}
-            className="absolute right-6 top-6 text-ink-3 hover:bg-glass-hover"
-          />
-        )}
-
-        <div className="flex flex-col gap-[22px]">
-          <AlbumArt
-            key={songId ?? "empty"}
-            src={currSong?.songPicture ?? null}
-            songName={currSong?.songName ?? null}
-          />
-          <TransportControls />
-          <TrackProgress />
+      {/* Two columns from md: up. Below that the column wrappers dissolve
+          (`contents`) and `order-*` restacks their children into one column. */}
+      <GlassPanel
+        radius="card"
+        className="flex flex-col gap-6 p-5 md:grid md:grid-cols-[300px_1fr] md:gap-11 md:p-9"
+      >
+        <div className="contents md:flex md:flex-col md:gap-[22px]">
+          <div className="order-1 md:order-none">
+            <AlbumArt
+              key={songId ?? "empty"}
+              src={currSong?.songPicture ?? null}
+              songName={currSong?.songName ?? null}
+            />
+          </div>
+          <div className="order-4 md:order-none">
+            <TransportControls />
+          </div>
+          <div className="order-3 md:order-none">
+            <TrackProgress />
+          </div>
         </div>
 
-        {currSong ? (
-          <TrackMeta key={currSong.songId} currSong={currSong} />
-        ) : (
-          <div className="fade-up flex flex-col justify-center gap-2">
-            <h1 className="font-display text-[34px] font-semibold leading-[1.1]">
-              Welcome to Explorify
-            </h1>
-            <p className="text-base">
-              Play something on Spotify, then hit Discover to find your next song.
-            </p>
-          </div>
-        )}
+        <div className="contents md:flex md:flex-col md:gap-6">
+          {currSong ? (
+            <>
+              <div className="order-2 md:order-none">
+                <TrackHeading key={currSong.songId} currSong={currSong} />
+              </div>
+              <div className="order-5 md:order-none">
+                <TrackDetails key={currSong.songId} currSong={currSong} />
+              </div>
+            </>
+          ) : (
+            <div className="fade-up order-2 flex flex-col justify-center gap-2 text-center md:order-none md:flex-1 md:text-left">
+              <h1 className="font-display text-[28px] font-semibold leading-[1.1] md:text-[34px]">
+                Welcome to Explorify
+              </h1>
+              <p className="text-base">
+                Play something on Spotify, then hit Discover to find your next song.
+              </p>
+            </div>
+          )}
+        </div>
       </GlassPanel>
 
       <DiscoverButton
