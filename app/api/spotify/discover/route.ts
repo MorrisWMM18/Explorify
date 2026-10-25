@@ -22,8 +22,8 @@ export const runtime = "nodejs";
 const MAX_SONG_RECOMMENDATIONS = 20;
 const MAX_ARTIST_RECOMMENDATIONS = 9;
 
-// Fallback when Last.fm has no similar-track data for the seed (common for newer
-// releases): top songs from the first few similar artists.
+// Fallback when Last.fm has no similar-track data for the seed.
+// Return top songs from the first few similar artists.
 const FALLBACK_ARTIST_COUNT = 5;
 const FALLBACK_SONGS_PER_ARTIST = 2;
 
@@ -43,7 +43,6 @@ function dedupeById<T extends { id?: string }>(items: T[]): T[] {
   return result;
 }
 
-// LastfmSimilarTrack is structurally a LastfmTopTrack, so both paths share this.
 async function resolveTracks(
   accessToken: string,
   tracks: LastfmTopTrack[]
@@ -64,9 +63,6 @@ async function resolveArtists(
   return resolved.filter((artist): artist is SpotifyArtist => artist !== null);
 }
 
-// Best-effort per artist: this is already a fallback, so one artist's Last.fm
-// failure drops that artist's songs rather than failing the whole request.
-// Results stay in similarity order: A1 A2 B1 B2 …
 async function getFallbackSongs(
   accessToken: string,
   similarArtists: LastfmSimilarArtist[]
@@ -115,7 +111,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<DiscoverRespo
     // Seed names come from /tracks/{id} rather than CurrSong.songArtist, which is a
     // comma-joined list of every artist and matches nothing on Last.fm.
     const seed = await spotifyFetch<SpotifyTrack>(accessToken, `/tracks/${trackId}`);
-    const seedArtist = seed?.artists?.[0]?.name;
+    const seedArtist = seed?.artists?.[0]?.name; // Only grabbing the first artist since that's most likely the main artist of the song
     if (!seed?.name || !seedArtist) {
       return NextResponse.json({ songRecommendations: [], artistRecommendations: [] });
     }
@@ -151,9 +147,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<DiscoverRespo
       console.error("[/api/spotify/discover] Last.fm", error.status, error.code, getErrorMessage(error));
       return NextResponse.json(
         {
-          error: process.env.LASTFM_API_KEY
-            ? "Couldn't get recommendations from Last.fm — try again in a moment."
-            : "Song recommendations aren't configured (missing Last.fm API key).",
+          error: "Encounted an error when getting your recommended songs. Please try again later."
         },
         { status: 502 }
       );
