@@ -19,6 +19,7 @@ import TrackMeta from "./TrackMeta";
 import DiscoverButton from "./DiscoverButton";
 import TransportControls from "./TransportControls";
 import TrackProgress from "./TrackProgress";
+import TrackActionsMenu from "../songs/TrackActionsMenu";
 
 function NowPlayingCard() {
   const dispatch = useAppDispatch();
@@ -114,7 +115,18 @@ function NowPlayingCard() {
 
   return (
     <section className="flex flex-col gap-5">
-      <GlassPanel radius="card" className="grid grid-cols-[300px_1fr] gap-11 p-9">
+      <GlassPanel radius="card" className="relative grid grid-cols-[300px_1fr] gap-11 p-9">
+        {currSong?.songId && (
+          <TrackActionsMenu
+            key={currSong.songId}
+            trackUri={currSong.songUri}
+            trackName={currSong.songName}
+            artistName={currSong.songArtist}
+            artistId={currSong.songArtistId || null}
+            className="absolute right-6 top-6 text-ink-3 hover:bg-glass-hover"
+          />
+        )}
+
         <div className="flex flex-col gap-[22px]">
           <AlbumArt
             key={songId ?? "empty"}
