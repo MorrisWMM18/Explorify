@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken, spotifyFetch, SpotifyApiError } from "@/lib/spotifyApi";
-import { getArtistGenres } from "@/lib/artistGenres";
 import { getErrorMessage } from "@/lib/errors";
 import type { CurrentTrackResponse, SpotifyCurrentlyPlaying } from "@/types/spotify";
 
@@ -28,8 +27,6 @@ export async function GET(req: NextRequest): Promise<NextResponse<CurrentTrackRe
     const track = playback.item;
     const artistId = track.artists[0].id;
 
-    const genres = await getArtistGenres(accessToken, artistId);
-
     return NextResponse.json({
       currSong: {
         songId: track.id,
@@ -40,7 +37,9 @@ export async function GET(req: NextRequest): Promise<NextResponse<CurrentTrackRe
         songPicture: track.album.images[0]?.url ?? null,
         durationMs: track.duration_ms,
         releaseDate: track.album.release_date,
-        genres,
+        albumName: track.album.name,
+        deviceName: playback.device?.name ?? null,
+        deviceType: playback.device?.type ?? null,
       },
       playback: {
         isPlaying: playback.is_playing,

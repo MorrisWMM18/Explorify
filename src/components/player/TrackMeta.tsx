@@ -25,21 +25,15 @@ function TrackMeta({ currSong }: TrackMetaProps) {
       {/* Song metadata */}
       <div className="grid grid-cols-2 gap-6">
         <div className="col-span-full">
-          <p className="mb-2 text-[13px]">Genres</p>
-          {currSong.genres.length > 0 ? (
-            <ul className="flex list-none flex-wrap gap-[7px] p-0">
-              {currSong.genres.map((genre) => (
-                <li
-                  key={genre}
-                  className="rounded-full border border-hairline-hi bg-glass px-3 py-1.5 text-xs text-ink-2 shadow-control"
-                >
-                  {genre}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm">Unknown</p>
-          )}
+          <p className="mb-1.5 text-[13px]">Album</p>
+          <p className="text-sm">{currSong.albumName || "Unknown"}</p>
+        </div>
+
+        <div className="col-span-full">
+          <p className="mb-1.5 text-[13px]">Playing On</p>
+          <p className="text-sm">
+            {[currSong.deviceName, currSong.deviceType].filter(Boolean).join(" · ") || "Unknown"}
+          </p>
         </div>
 
         <div>

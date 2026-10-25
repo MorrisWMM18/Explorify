@@ -1,30 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken, spotifyFetch, SpotifyApiError } from "@/lib/spotifyApi";
-import { getArtistGenres } from "@/lib/artistGenres";
 import { getErrorMessage } from "@/lib/errors";
-import type {
-  DiscoverResponse,
-  SpotifyArtist,
-  SpotifySearchArtistsResponse,
-  SpotifySearchTracksResponse,
-  SpotifyTopTracksResponse,
-  SpotifyTrack,
-} from "@/types/spotify";
+import {
+  getArtistTopTracks,
+  getSimilarArtists,
+  getSimilarTracks,
+  LastfmApiError,
+} from "@/lib/lastfm";
+import { resolveSpotifyArtist, resolveSpotifyTrack } from "@/lib/resolveTrack";
+import type { DiscoverResponse, SpotifyArtist, SpotifyTrack } from "@/types/spotify";
+import type { LastfmSimilarArtist, LastfmTopTrack } from "@/types/lastfm";
 
-// Endpoint that provides music and artist recommendations
+// Endpoint that provides music and artist recommendations.
+// Seed track -> Last.fm track.getSimilar / artist.getSimilar -> each name resolved
+// back to a Spotify track / artist via Search. If no songs come out of that, falls
+// back to the top songs of the first few similar artists.
 
 export const runtime = "nodejs";
-
-const MARKET = "US";
 
 // TODO: Move these two variables to project-wide env variable
 const MAX_SONG_RECOMMENDATIONS = 20;
 const MAX_ARTIST_RECOMMENDATIONS = 9;
 
+// Fallback when Last.fm has no similar-track data for the seed.
+// Return top songs from the first few similar artists.
+const FALLBACK_ARTIST_COUNT = 5;
+const FALLBACK_SONGS_PER_ARTIST = 2;
+
 // Spotify ids are base62. artistId is client-supplied now and gets interpolated
 // into a Spotify path, so reject anything that isn't an id before using it.
-// trackId never reaches a path (it's only a filter comparand below), but it's
-// validated the same way as input hygiene.
+// trackId is interpolated into /tracks/{id} for the seed lookup, so the same applies.
 const SPOTIFY_ID = /^[A-Za-z0-9]{1,40}$/;
 
 function dedupeById<T extends { id?: string }>(items: T[]): T[] {
@@ -36,6 +41,41 @@ function dedupeById<T extends { id?: string }>(items: T[]): T[] {
     result.push(item);
   }
   return result;
+}
+
+async function resolveTracks(
+  accessToken: string,
+  tracks: LastfmTopTrack[]
+): Promise<SpotifyTrack[]> {
+  const resolved = await Promise.all(
+    tracks.map((track) => resolveSpotifyTrack(accessToken, track.artist.name, track.name))
+  );
+  return resolved.filter((track): track is SpotifyTrack => track !== null);
+}
+
+async function resolveArtists(
+  accessToken: string,
+  similar: LastfmSimilarArtist[]
+): Promise<SpotifyArtist[]> {
+  const resolved = await Promise.all(
+    similar.map((artist) => resolveSpotifyArtist(accessToken, artist.name))
+  );
+  return resolved.filter((artist): artist is SpotifyArtist => artist !== null);
+}
+
+async function getFallbackSongs(
+  accessToken: string,
+  similarArtists: LastfmSimilarArtist[]
+): Promise<SpotifyTrack[]> {
+  const topTracks = await Promise.all(
+    similarArtists.slice(0, FALLBACK_ARTIST_COUNT).map((artist) =>
+      getArtistTopTracks(artist.name, FALLBACK_SONGS_PER_ARTIST).catch((error) => {
+        console.error("[getFallbackSongs]", artist.name, getErrorMessage(error));
+        return [];
+      })
+    )
+  );
+  return resolveTracks(accessToken, topTracks.flat());
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse<DiscoverResponse>> {
@@ -68,55 +108,51 @@ export async function POST(req: NextRequest): Promise<NextResponse<DiscoverRespo
   }
 
   try {
-    const [genres, topTracksResponse] = await Promise.all([
-      getArtistGenres(accessToken, artistId),
-      spotifyFetch<SpotifyTopTracksResponse>(
-        accessToken,
-        `/artists/${artistId}/top-tracks?market=${MARKET}`
-      ),
-    ]);
-
-    const topGenre = genres[0];
-
-    // Best-effort genre augmentation: if Search behaves unexpectedly for a given
-    // genre string, fall back to just the artist's own top tracks rather than
-    // failing the whole request.
-    let genreTracks: SpotifyTrack[] = [];
-    let genreArtists: SpotifyArtist[] = [];
-    if (topGenre) {
-      const genreQuery = encodeURIComponent(`genre:"${topGenre}"`);
-
-      try {
-        const genreTracksResponse = await spotifyFetch<SpotifySearchTracksResponse>(
-          accessToken,
-          `/search?q=${genreQuery}&type=track&market=${MARKET}&limit=20`
-        );
-        genreTracks = genreTracksResponse?.tracks?.items ?? [];
-      } catch {
-        genreTracks = [];
-      }
-
-      try {
-        const genreArtistsResponse = await spotifyFetch<SpotifySearchArtistsResponse>(
-          accessToken,
-          `/search?q=${genreQuery}&type=artist&market=${MARKET}&limit=20`
-        );
-        genreArtists = genreArtistsResponse?.artists?.items ?? [];
-      } catch {
-        genreArtists = [];
-      }
+    // Seed names come from /tracks/{id} rather than CurrSong.songArtist, which is a
+    // comma-joined list of every artist and matches nothing on Last.fm.
+    const seed = await spotifyFetch<SpotifyTrack>(accessToken, `/tracks/${trackId}`);
+    const seedArtist = seed?.artists?.[0]?.name; // Only grabbing the first artist since that's most likely the main artist of the song
+    if (!seed?.name || !seedArtist) {
+      return NextResponse.json({ songRecommendations: [], artistRecommendations: [] });
     }
 
-    const songRecommendations = dedupeById([...(topTracksResponse?.tracks ?? []), ...genreTracks])
+    const [lastfmTracks, lastfmArtists] = await Promise.all([
+      getSimilarTracks(seedArtist, seed.name, MAX_SONG_RECOMMENDATIONS),
+      getSimilarArtists(seedArtist, MAX_ARTIST_RECOMMENDATIONS),
+    ]);
+
+    const [similarTracks, similarArtists] = await Promise.all([
+      resolveTracks(accessToken, lastfmTracks),
+      resolveArtists(accessToken, lastfmArtists),
+    ]);
+
+    let songRecommendations = dedupeById(similarTracks)
       .filter((track) => track.id !== trackId)
       .slice(0, MAX_SONG_RECOMMENDATIONS);
 
-    const artistRecommendations = dedupeById(genreArtists)
+    if (songRecommendations.length === 0) {
+      console.log("[/api/spotify/discover] song fallback", seedArtist, "-", seed.name);
+      songRecommendations = dedupeById(await getFallbackSongs(accessToken, lastfmArtists))
+        .filter((track) => track.id !== trackId)
+        .slice(0, FALLBACK_ARTIST_COUNT * FALLBACK_SONGS_PER_ARTIST);
+    }
+
+    const artistRecommendations = dedupeById(similarArtists)
       .filter((artist) => artist.id !== artistId)
       .slice(0, MAX_ARTIST_RECOMMENDATIONS);
 
     return NextResponse.json({ songRecommendations, artistRecommendations });
   } catch (error) {
+    if (error instanceof LastfmApiError) {
+      console.error("[/api/spotify/discover] Last.fm", error.status, error.code, getErrorMessage(error));
+      return NextResponse.json(
+        {
+          error: "Encounted an error when getting your recommended songs. Please try again later."
+        },
+        { status: 502 }
+      );
+    }
+
     const status = error instanceof SpotifyApiError ? error.status : 500;
     const message =
       status === 429

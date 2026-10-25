@@ -91,8 +91,6 @@ function ArtistDetail({ artistId }: ArtistDetailProps) {
                 {artist.name}
               </h1>
               <div className="flex items-center gap-3.5 text-sm">
-                {artist.genres[0] && <span>{artist.genres[0]}</span>}
-                {artist.genres[0] && artist.followers && <span aria-hidden="true">·</span>}
                 {artist.followers && <span>{formatFollowers(artist.followers.total)}</span>}
               </div>
             </div>

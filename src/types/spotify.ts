@@ -117,7 +117,6 @@ export interface SpotifyPagingObject<T> {
 export interface SpotifyArtist {
   external_urls: SpotifyExternalUrls;
   followers?: SpotifyFollowers;
-  genres: string[];
   href: string;
   id: string;
   images?: SpotifyImage[];
@@ -181,7 +180,9 @@ export interface CurrSong {
   songPicture: string | null;
   durationMs: number;
   releaseDate: string | null;
-  genres: string[];
+  albumName: string;
+  deviceName: string | null;
+  deviceType: string | null;
 }
 
 export interface PlaybackStatus {
