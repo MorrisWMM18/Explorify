@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import emptyMixImage from "../../images/emptymix.svg";
+// Unsplash stock photo (Unsplash License), shown while nothing is playing.
+const IDLE_ART_SRC = "/images/no-playback.jpg";
 
 interface AlbumArtProps {
   src: string | null;
@@ -30,7 +31,7 @@ function AlbumArt({ src, songName }: AlbumArtProps) {
     // eslint-disable-next-line @next/next/no-img-element
     <img
       ref={imgRef}
-      src={src ?? emptyMixImage}
+      src={src ?? IDLE_ART_SRC}
       alt={songName ? `Album art for ${songName}` : ""}
       onLoad={() => setLoaded(true)}
       // A broken image never fires onLoad; reveal anyway rather than leave a blank slot.
