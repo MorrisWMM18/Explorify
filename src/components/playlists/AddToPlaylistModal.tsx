@@ -12,11 +12,13 @@ import {
   TextField,
 } from "react-aria-components";
 
-import type { SpotifySimplifiedPlaylist, SpotifyTrack } from "@/types/spotify";
+import type { SpotifySimplifiedPlaylist } from "@/types/spotify";
 import { getErrorMessage } from "@/lib/errors";
 
 interface AddToPlaylistModalProps {
-  track: SpotifyTrack;
+  trackUri: string;
+  trackName: string;
+  artistName: string;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
 }
@@ -24,7 +26,13 @@ interface AddToPlaylistModalProps {
 type PlaylistsResponse = { playlists: SpotifySimplifiedPlaylist[] } | { error: string };
 type CreatePlaylistResponse = { playlist: SpotifySimplifiedPlaylist } | { error: string };
 
-function AddToPlaylistModal({ track, isOpen, onOpenChange }: AddToPlaylistModalProps) {
+function AddToPlaylistModal({
+  trackUri,
+  trackName,
+  artistName,
+  isOpen,
+  onOpenChange,
+}: AddToPlaylistModalProps) {
   const [playlists, setPlaylists] = useState<SpotifySimplifiedPlaylist[]>([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(true);
   const [playlistsError, setPlaylistsError] = useState<string | null>(null);
@@ -72,7 +80,7 @@ function AddToPlaylistModal({ track, isOpen, onOpenChange }: AddToPlaylistModalP
       const response = await fetch(`/api/spotify/playlists/${playlistId}/tracks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trackUri: track.uri }),
+        body: JSON.stringify({ trackUri }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Failed to add track");
@@ -93,7 +101,7 @@ function AddToPlaylistModal({ track, isOpen, onOpenChange }: AddToPlaylistModalP
       const response = await fetch("/api/spotify/playlists", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newPlaylistName, trackUri: track.uri }),
+        body: JSON.stringify({ name: newPlaylistName, trackUri }),
       });
       const data: CreatePlaylistResponse = await response
         .json()
@@ -137,7 +145,7 @@ function AddToPlaylistModal({ track, isOpen, onOpenChange }: AddToPlaylistModalP
               </div>
 
               <p className="text-[13px] text-ink-4">
-                {track.name} — {track.artists[0]?.name}
+                {trackName} — {artistName}
               </p>
 
               <ul className="flex list-none flex-col gap-0.5 p-0">
