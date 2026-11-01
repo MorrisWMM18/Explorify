@@ -13,7 +13,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { trackUri }: { trackUri?: string } = await req.json();
+  const { trackUri, albumUri }: { trackUri?: string; albumUri?: string } = await req.json();
   if (!trackUri) {
     return NextResponse.json({ error: "trackUri is required" }, { status: 400 });
   }
@@ -25,9 +25,15 @@ export async function PUT(req: NextRequest) {
     const deviceId = player?.device?.id;
     const query = deviceId ? `?device_id=${encodeURIComponent(deviceId)}` : "";
 
+    // Play the track within its album (as Spotify's own apps do) rather than as a lone
+    // uri: the iPhone app was observed to drop a bare `uris` play.
+    const body = albumUri
+      ? { context_uri: albumUri, offset: { uri: trackUri }, position_ms: 0 }
+      : { uris: [trackUri], position_ms: 0 };
+
     await spotifyFetch(accessToken, `/me/player/play${query}`, {
       method: "PUT",
-      body: JSON.stringify({ uris: [trackUri], position_ms: 0 }),
+      body: JSON.stringify(body),
     });
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -27,7 +27,7 @@ function SongRow({ track, enterDelayMs = 0 }: SongRowProps) {
       const response = await fetch("/api/spotify/playback", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trackUri: track.uri }),
+        body: JSON.stringify({ trackUri: track.uri, albumUri: track.album.uri }),
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
