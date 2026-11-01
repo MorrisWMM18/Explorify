@@ -23,9 +23,15 @@ function RecommendedSongs() {
 
   return (
     <section>
-      <div className="mb-3.5 flex items-baseline justify-between">
-        <h2 className="font-display text-[22px] font-semibold">Recommended for you</h2>
-        {currSong && <p className="text-[13px]">Based on {currSong.songName}</p>}
+      <div className="mb-3.5 flex items-baseline justify-between gap-4">
+        <h2 className="flex-none font-display text-[18px] font-semibold md:text-[22px]">
+          Recommended for you
+        </h2>
+        {currSong && (
+          <p className="min-w-0 truncate text-[11px] md:text-[13px]">
+            Based on {currSong.songName}
+          </p>
+        )}
       </div>
 
       <GlassPanel radius="panel" className="flex flex-col p-2.5">
