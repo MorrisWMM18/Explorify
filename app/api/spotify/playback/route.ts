@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken, spotifyFetch, SpotifyApiError } from "@/lib/spotifyApi";
 import { getErrorMessage } from "@/lib/errors";
+import type { SpotifyCurrentlyPlaying } from "@/types/spotify";
 
 export const runtime = "nodejs";
 
@@ -18,7 +19,13 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    await spotifyFetch(accessToken, "/me/player/play", {
+    // Name the active device explicitly rather than letting Spotify pick one: an untargeted
+    // play-with-uris command was observed to stop playback on the Spotify mobile app.
+    const player = await spotifyFetch<SpotifyCurrentlyPlaying>(accessToken, "/me/player");
+    const deviceId = player?.device?.id;
+    const query = deviceId ? `?device_id=${encodeURIComponent(deviceId)}` : "";
+
+    await spotifyFetch(accessToken, `/me/player/play${query}`, {
       method: "PUT",
       body: JSON.stringify({ uris: [trackUri], position_ms: 0 }),
     });
