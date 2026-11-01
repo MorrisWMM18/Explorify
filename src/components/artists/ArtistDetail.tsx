@@ -79,18 +79,22 @@ function ArtistDetail({ artistId }: ArtistDetailProps) {
 
       {artist && (
         <>
-          <GlassPanel radius="card" className="grid grid-cols-[240px_1fr] items-start gap-10 p-9">
+          {/* Two columns from md: up, one stacked column below (as in NowPlayingCard). */}
+          <GlassPanel
+            radius="card"
+            className="flex flex-col gap-6 p-5 md:grid md:grid-cols-[240px_1fr] md:items-start md:gap-10 md:p-9"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={artistPhoto}
               alt=""
-              className="size-[240px] flex-none rounded-full object-cover"
+              className="aspect-square w-full rounded-full object-cover"
             />
-            <div className="flex flex-col gap-3.5">
-              <h1 className="font-display text-[38px] font-semibold tracking-[-0.01em]">
+            <div className="flex flex-col gap-3.5 text-center md:text-left">
+              <h1 className="font-display text-[28px] font-semibold leading-[1.1] tracking-[-0.01em] md:text-[38px] md:leading-normal">
                 {artist.name}
               </h1>
-              <div className="flex items-center gap-3.5 text-sm">
+              <div className="flex items-center justify-center gap-3.5 text-sm md:justify-start">
                 {artist.followers && <span>{formatFollowers(artist.followers.total)}</span>}
               </div>
             </div>

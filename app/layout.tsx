@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     "Explorify gives Spotify users endless music and artist recommendations based on the song they're currently listening to.",
   manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.ico",
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/favicon.ico" }],
   },
 };
 

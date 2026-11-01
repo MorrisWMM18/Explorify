@@ -7,16 +7,21 @@ import PillButton from "./ui/PillButton";
 
 function Login() {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden p-4">
       <GlassBackdrop />
 
       <GlassPanel
         radius="card"
-        className="relative z-10 flex flex-col items-center gap-6 p-12 text-center"
+        className="relative z-10 flex flex-col items-center gap-6 p-8 text-center md:p-12"
       >
         <div className="flex items-center gap-[11px]">
-          <div
-            className="accent-gloss size-[30px] flex-none rounded-swatch shadow-control"
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/icon.svg"
+            alt=""
+            width={30}
+            height={30}
+            className="size-[30px] flex-none rounded-swatch shadow-control"
             data-role="logo-mark"
           />
           <span className="font-display text-[19px] font-semibold tracking-[-0.02em]">

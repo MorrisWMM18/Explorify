@@ -13,7 +13,7 @@ function AppShell({ children }: AppShellProps) {
       <Header />
 
       <div className="relative z-10 flex-1 overflow-auto">
-        <main className="mx-auto flex max-w-[1180px] flex-col gap-13 px-12 pb-[90px] pt-10">
+        <main className="mx-auto flex max-w-[1180px] flex-col gap-13 px-4 pb-[90px] md:px-12 pt-10">
           {children}
         </main>
       </div>

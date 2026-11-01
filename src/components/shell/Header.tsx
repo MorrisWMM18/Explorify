@@ -9,12 +9,17 @@ function Header() {
   const user = session?.user;
 
   return (
-    <header className="relative z-20 flex h-[74px] flex-none items-center justify-between px-11">
+    <header className="relative z-20 flex h-[74px] flex-none items-center justify-between px-4 md:px-11">
       {/* Explorify + Home tab */}
-      <div className="flex items-center gap-[30px]">
+      <div className="flex items-center gap-3 md:gap-[30px]">
         <div className="flex items-center gap-[11px]">
-          <div
-            className="accent-gloss size-[30px] flex-none rounded-swatch shadow-control"
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/icon.svg"
+            alt=""
+            width={30}
+            height={30}
+            className="size-[30px] flex-none rounded-swatch shadow-control"
             data-role="logo-mark"
           />
           <span className="font-display text-[19px] font-semibold tracking-[-0.02em]">
@@ -30,7 +35,7 @@ function Header() {
       </div>
 
       {/* Spotify connect status + Account */}
-      <div className="flex items-center gap-[18px]">
+      <div className="flex items-center gap-3 md:gap-[18px]">
         <StatusPill>Connected to Spotify</StatusPill>
 
         <MenuTrigger>
@@ -48,9 +53,9 @@ function Header() {
                 className="size-8 flex-none rounded-full object-cover"
               />
             ) : (
-              <span className="size-8 flex-none rounded-full" />
+              <span className="size-8 flex-none rounded-full border border-hairline-hi bg-glass" />
             )}
-            <span className="text-sm font-medium">{user?.name}</span>
+            <span className="hidden text-sm font-medium md:inline">{user?.name}</span>
           </Button>
           <Popover
             placement="bottom end"
