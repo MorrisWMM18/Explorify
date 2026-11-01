@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken, spotifyFetch, SpotifyApiError } from "@/lib/spotifyApi";
 import { getErrorMessage } from "@/lib/errors";
-import type { SpotifyCurrentlyPlaying } from "@/types/spotify";
 
 export const runtime = "nodejs";
 
@@ -19,19 +18,12 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    // Name the active device explicitly rather than letting Spotify pick one: an untargeted
-    // play-with-uris command was observed to stop playback on the Spotify mobile app.
-    const player = await spotifyFetch<SpotifyCurrentlyPlaying>(accessToken, "/me/player");
-    const deviceId = player?.device?.id;
-    const query = deviceId ? `?device_id=${encodeURIComponent(deviceId)}` : "";
-
-    // Play the track within its album (as Spotify's own apps do) rather than as a lone
-    // uri: the iPhone app was observed to drop a bare `uris` play.
+    // Play the track within its album rather than individually since the iPhone app was observed to drop a bare `uris` play.
     const body = albumUri
       ? { context_uri: albumUri, offset: { uri: trackUri }, position_ms: 0 }
       : { uris: [trackUri], position_ms: 0 };
 
-    await spotifyFetch(accessToken, `/me/player/play${query}`, {
+    await spotifyFetch(accessToken, "/me/player/play", {
       method: "PUT",
       body: JSON.stringify(body),
     });
