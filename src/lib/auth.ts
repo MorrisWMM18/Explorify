@@ -3,6 +3,7 @@ import type { NextAuthOptions } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 
 const SPOTIFY_SCOPES = [
+  "user-read-private",
   "user-read-currently-playing",
   "user-read-recently-played",
   "user-read-playback-state",

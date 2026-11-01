@@ -7,7 +7,7 @@ import type {
   SpotifyTrack,
 } from "@/types/spotify";
 
-const MARKET = "US";
+const MARKET = "from_token";
 const SEARCH_LIMIT = 5; // Spotify caps search at 10
 
 function normalise(name: string): string {
